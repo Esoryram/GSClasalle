@@ -209,7 +209,7 @@ body {
     border-radius: 20px;
     font-weight: bold;
     font-size: 12px;
-    margin-left: 500px;
+    margin-left: 475px;
 }
 
 .status-pending {
