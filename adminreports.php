@@ -81,204 +81,49 @@ if ($generateClicked) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Reports</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 <style>
-/* General body */
-body {
-    background-color: white;
-    font-family: Arial, sans-serif;
-    margin: 0;
-}
+body { background-color: white; font-family: Arial, sans-serif; margin: 0; }
+.navbar { display: flex; align-items: center; background: linear-gradient(135deg, #163a37, #1c4440, #275850, #1f9158); padding: 15px 30px; color: white; }
+.logo { display: flex; align-items: center; margin-right: 25px; }
+.logo img { height: 40px; width: auto; }
+.navbar .links { display: flex; gap: 20px; margin-right: auto; }
+.navbar .links a { color: white; text-decoration: none; font-weight: bold; padding: 6px 12px; border-radius: 5px; transition: 0.3s; }
+.navbar .links a.active { background-color: #4ba06f; }
+.navbar .links a:hover { background-color: #107040; }
+.dropdown { position: relative; display: flex; align-items: center; gap: 5px; }
+.dropdown .username { font-weight: bold; font-size: 16px; padding: 6px 12px; }
+.dropdown:hover .dropdown-menu { display: block; }
+.dropdown-menu { display: none; position: absolute; top: 100%; right: 0; background-color: white; min-width: 180px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); border-radius: 5px; overflow: hidden; z-index: 10; }
+.dropdown-menu a { display: block; padding: 12px 16px; text-decoration: none; color: #333; font-size: 14px; }
+.dropdown-menu a:hover { background-color: #f1f1f1; }
 
-/* Navbar */
-.navbar {
+.page-container { padding: 30px 40px; }
+.report-controls { display: flex; align-items: center; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; }
+.input-filter-width { width: 150px !important; padding: 10px 15px; font-weight: bold; border-radius: 8px; border: 1px solid #ced4da; box-shadow: 0 2px 5px rgba(0,0,0,0.1); background-color: white; font-size: 16px; }
+.btn-generate { background-color: #198754; color: white; padding: 10px 20px; font-weight: bold; border-radius: 8px; border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: background-color 0.3s; margin-left: auto; }
+.btn-generate:hover { background-color: #146c43; }
+.btn-print { position: fixed; bottom: 20px; right: 40px; background-color: #198754; color: white; padding: 5px 40px; font-weight: bold; border-radius: 8px; border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.2); cursor: pointer; transition: background-color 0.3s; z-index: 1000; }
+.btn-print:hover { background-color: #146c43; }
+@media print { .btn-print, .btn-generate, .report-controls, .navbar { display: none !important; } }
+
+.table-container { border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); position: relative; }
+.table thead { background-color: #198754; color: white; }
+.table-bordered { border: 1px solid #dee2e6; }
+
+/* Refresh button next to Status filter */
+.refresh-btn {
     display: flex;
     align-items: center;
-    background: linear-gradient(135deg, #163a37, #1c4440, #275850, #1f9158);
-    padding: 15px 30px;
-    color: white;
-}
-
-.logo {
-    display: flex;
-    align-items: center;
-    margin-right: 25px;
-}
-
-.logo img {
-    height: 40px;
-    width: auto;
-}
-
-.navbar .links {
-    display: flex;
-    gap: 20px;
-    margin-right: auto;
-}
-
-.navbar .links a {
-    color: white;
-    text-decoration: none;
-    font-weight: bold;
-    padding: 6px 12px;
-    border-radius: 5px;
-    transition: 0.3s;
-}
-
-.navbar .links a.active {
-    background-color: #4ba06f;
-}
-
-.navbar .links a:hover {
-    background-color: #107040;
-}
-
-.dropdown {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.dropdown .username {
-    font-weight: bold;
-    font-size: 16px;
-    padding: 6px 12px;
-}
-
-.dropdown:hover .dropdown-menu {
-    display: block;
-}
-
-.dropdown-menu {
-    display: none;
-    position: absolute;
-    top: 100%;
-    right: 0;
-    background-color: white;
-    min-width: 180px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    border-radius: 5px;
-    overflow: hidden;
-    z-index: 10;
-}
-
-.dropdown-menu a {
-    display: block;
-    padding: 12px 16px;
-    text-decoration: none;
-    color: #333;
-    font-size: 14px;
-}
-
-.dropdown-menu a:hover {
-    background-color: #f1f1f1;
-}
-
-/* Page container */
-.page-container {
-    padding: 30px 40px;
-}
-
-/* Report controls (filters + buttons) */
-.report-controls {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    margin-bottom: 25px;
-}
-
-.input-filter-width {
-    width: 150px !important;
-    padding: 10px 15px;
-    font-weight: bold;
-    border-radius: 8px;
-    border: 1px solid #ced4da;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    background-color: white;
-    font-size: 16px;
-}
-
-.input-search {
-    width: 160px;
-    padding: 10px 15px;
-    font-weight: normal;
-    border-radius: 8px;
-    border: 1px solid #ced4da;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-/* Generate button inside filter controls */
-.btn-generate {
-    background-color: #198754; 
-    color: white;
-    padding: 10px 20px;
-    font-weight: bold;
-    border-radius: 8px;
+    justify-content: center;
     border: none;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    transition: background-color 0.3s;
-    margin-left: auto; /* stays upper-right inside filter form */
-}
-
-.btn-generate:hover {
-    background-color: #146c43;
-}
-
-/* Print button bottom-right */
-.btn-print {
-    position: fixed;
-    bottom: 20px;
-    right: 40px;
-    background-color: #198754;
-    color: white;
-    padding: 5px 40px;
-    font-weight: bold;
-    border-radius: 8px;
-    border: none;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    background: transparent;
+    color: #198754; /* green */
+    font-size: 20px;
     cursor: pointer;
-    transition: background-color 0.3s;
-    z-index: 1000;
+    margin-left: 5px;
 }
-
-.btn-print:hover {
-    background-color: #146c43;
-}
-
-/* Hide print button during print */
-@media print {
-    .btn-print {
-        display: none;
-    }
-}
-
-/* Table */
-.table-container {
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    position: relative;
-}
-
-.table thead {
-    background-color: #198754;
-    color: white;
-}
-
-.table-bordered {
-    border: 1px solid #dee2e6;
-}
-
-/* Print adjustments */
-@media print {
-    .btn-generate,
-    .btn-print,
-    .report-controls,
-    .navbar {
-        display: none !important;
-    }
-}
+.refresh-btn:hover { color: #146c43; }
 </style>
 </head>
 <body>
@@ -292,7 +137,7 @@ body {
         <a href="adminconcerns.php" class="<?php echo ($activePage=="concerns")?"active":""; ?>">Concerns</a>
         <a href="adminreports.php" class="<?php echo ($activePage=="reports")?"active":""; ?>">Reports</a>
         <a href="adminfeedback.php" class="<?php echo ($activePage=="feedback")?"active":""; ?>">Feedback</a>
-        <a href="adminannounce.php" class="<?php echo ($activePage=="announcements")?"active":""; ?>">Announcements</a>
+        <a href="adminannouncement.php" class="<?php echo ($activePage=="announcements")?"active":""; ?>">Announcements</a>
     </div>
     <div class="dropdown">
         <span class="username"><?php echo htmlspecialchars($name); ?></span>
@@ -310,35 +155,35 @@ body {
         <input type="hidden" name="generate" value="1">
         <div class="report-controls">
             <!-- Room Dropdown -->
-            <select class="form-select input-filter-width" name="room" aria-label="Room filter">
+            <select class="form-select input-filter-width" name="room">
                 <option value="All Rooms" <?php echo ($filterRoom == 'All Rooms' || $filterRoom == '') ? 'selected' : ''; ?>>Room</option>
                 <?php foreach ($roomOptions as $room): ?>
-                    <option value="<?php echo htmlspecialchars($room); ?>" <?php echo ($filterRoom == $room) ? 'selected' : ''; ?>>
-                        <?php echo htmlspecialchars($room); ?>
-                    </option>
+                    <option value="<?php echo htmlspecialchars($room); ?>" <?php echo ($filterRoom == $room) ? 'selected' : ''; ?>><?php echo htmlspecialchars($room); ?></option>
                 <?php endforeach; ?>
             </select>
-
             <!-- Assigned To Dropdown -->
-            <select class="form-select input-filter-width" name="assigned" aria-label="Assigned To filter">
+            <select class="form-select input-filter-width" name="assigned">
                 <option value="All Personnel" <?php echo ($filterAssignedTo == 'All Personnel' || $filterAssignedTo == '') ? 'selected' : ''; ?>>Assigned To</option>
                 <?php foreach ($assignedOptions as $person): ?>
-                    <option value="<?php echo htmlspecialchars($person); ?>" <?php echo ($filterAssignedTo == $person) ? 'selected' : ''; ?>>
-                        <?php echo htmlspecialchars($person); ?>
-                    </option>
+                    <option value="<?php echo htmlspecialchars($person); ?>" <?php echo ($filterAssignedTo == $person) ? 'selected' : ''; ?>><?php echo htmlspecialchars($person); ?></option>
                 <?php endforeach; ?>
             </select>
-
             <!-- Status Dropdown -->
-            <select class="form-select input-filter-width" name="status" aria-label="Status filter">
-                <option value="All Statuses" <?php echo ($filterStatus == 'All Statuses' || $filterStatus == '') ? 'selected' : ''; ?>>Status</option>
-                <option value="Pending" <?php echo ($filterStatus == 'Pending') ? 'selected' : ''; ?>>Pending</option>
-                <option value="In Progress" <?php echo ($filterStatus == 'In Progress') ? 'selected' : ''; ?>>In Progress</option>
-                <option value="Completed" <?php echo ($filterStatus == 'Completed') ? 'selected' : ''; ?>>Completed</option>
-                <option value="Cancelled" <?php echo ($filterStatus == 'Cancelled') ? 'selected' : ''; ?>>Cancelled</option>
-            </select>
+            <div style="display: flex; align-items: center;">
+    <select class="form-select input-filter-width" name="status">
+        <option value="All Statuses" <?php echo ($filterStatus == 'All Statuses' || $filterStatus == '') ? 'selected' : ''; ?>>Status</option>
+        <option value="Pending" <?php echo ($filterStatus == 'Pending') ? 'selected' : ''; ?>>Pending</option>
+        <option value="In Progress" <?php echo ($filterStatus == 'In Progress') ? 'selected' : ''; ?>>In Progress</option>
+        <option value="Completed" <?php echo ($filterStatus == 'Completed') ? 'selected' : ''; ?>>Completed</option>
+        <option value="Cancelled" <?php echo ($filterStatus == 'Cancelled') ? 'selected' : ''; ?>>Cancelled</option>
+    </select>
+    <button type="button" class="refresh-btn" title="Reset Filters" onclick="window.location.href='adminreports.php'">
+        <i class="fas fa-sync-alt" style="font-size: 30px;"></i>
+    </button>
+</div>
 
-            <!-- Buttons -->
+
+            <!-- Generate Button -->
             <button class="btn-generate" type="submit">Generate</button>
             <?php if ($generateClicked): ?>
                 <button type="button" class="btn-print" onclick="window.print()">Print</button>
@@ -392,9 +237,7 @@ body {
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="9" class="text-center text-muted py-4">
-                                    No concerns found matching the current filters.
-                                </td>
+                                <td colspan="9" class="text-center text-muted py-4">No concerns found matching the current filters.</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
@@ -403,6 +246,5 @@ body {
         </div>
     <?php endif; ?>
 </div>
-
 </body>
 </html>

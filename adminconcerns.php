@@ -153,7 +153,7 @@ body {
         <a href="adminconcerns.php" class="<?php echo ($activePage=="concerns")?"active":""; ?>">Concerns</a>
         <a href="adminreports.php" class="<?php echo ($activePage=="reports")?"active":""; ?>">Reports</a>
         <a href="adminfeedback.php" class="<?php echo ($activePage=="feedback")?"active":""; ?>">Feedback</a>
-        <a href="adminannounce.php" class="<?php echo ($activePage=="announcements")?"active":""; ?>">Announcements</a>
+        <a href="adminannouncement.php" class="<?php echo ($activePage=="announcements")?"active":""; ?>">Announcements</a>
     </div>
     <div class="dropdown">
         <span class="username"><?php echo htmlspecialchars($name); ?></span>
