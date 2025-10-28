@@ -9,6 +9,62 @@ if(!isset($_SESSION['username'])){
 $username = $_SESSION['username']; 
 $name = isset($_SESSION['name']) ? $_SESSION['name'] : $username;
 $activePage = "dashboard"; 
+
+// Assume AccountID is stored in the session upon login, which is best practice.
+// If it's not, you'll need to fetch it first:
+$accountID = $_SESSION['accountID'] ?? null; 
+
+if (!$accountID) {
+    // Fetch AccountID based on username if it's not in the session
+    $accountQuery = "SELECT AccountID FROM Accounts WHERE Username = ?";
+    $stmt = mysqli_prepare($conn, $accountQuery);
+    mysqli_stmt_bind_param($stmt, "s", $username);
+    mysqli_stmt_execute($stmt);
+    $accountResult = mysqli_stmt_get_result($stmt);
+    $accountRow = mysqli_fetch_assoc($accountResult);
+    $accountID = $accountRow['AccountID'] ?? null;
+    // Store in session for future use
+    if ($accountID) {
+        $_SESSION['accountID'] = $accountID;
+    }
+}
+
+// Initialize counts
+$total = 0;
+$pending = 0;
+$inProgress = 0;
+
+if ($accountID && isset($conn)) {
+    // Total concerns for the logged-in user
+    $totalQuery = "SELECT COUNT(*) AS total FROM Concerns WHERE AccountID = ?";
+    $stmtTotal = mysqli_prepare($conn, $totalQuery);
+    mysqli_stmt_bind_param($stmtTotal, "i", $accountID);
+    mysqli_stmt_execute($stmtTotal);
+    $totalResult = mysqli_stmt_get_result($stmtTotal);
+    $totalRow = mysqli_fetch_assoc($totalResult);
+    $total = $totalRow['total'] ?? 0;
+
+    // Pending concerns for the logged-in user
+    $pendingQuery = "SELECT COUNT(*) AS pending FROM Concerns WHERE AccountID = ? AND Status = 'Pending'";
+    $stmtPending = mysqli_prepare($conn, $pendingQuery);
+    mysqli_stmt_bind_param($stmtPending, "i", $accountID);
+    mysqli_stmt_execute($stmtPending);
+    $pendingResult = mysqli_stmt_get_result($stmtPending);
+    $pendingRow = mysqli_fetch_assoc($pendingResult);
+    $pending = $pendingRow['pending'] ?? 0;
+
+    // In Progress concerns for the logged-in user
+    $inProgressQuery = "SELECT COUNT(*) AS inProgress FROM Concerns WHERE AccountID = ? AND Status = 'In Progress'";
+    $stmtInProgress = mysqli_prepare($conn, $inProgressQuery);
+    mysqli_stmt_bind_param($stmtInProgress, "i", $accountID);
+    mysqli_stmt_execute($stmtInProgress);
+    $inProgressResult = mysqli_stmt_get_result($stmtInProgress);
+    $inProgressRow = mysqli_fetch_assoc($inProgressResult);
+    $inProgress = $inProgressRow['inProgress'] ?? 0;
+}
+
+// NOTE: The AJAX data fetching for announcements will use the existing get_announcement.php
+// The AJAX data fetching for concerns status will be removed as the PHP now calculates it.
 ?>
 
 <!DOCTYPE html>
@@ -19,11 +75,14 @@ $activePage = "dashboard";
 <title>Dashboard</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
 <style>
+/* --- Core Styles from original userdb.php --- */
 body {
     margin: 0;
     font-family: Arial, sans-serif;
-    background: #f4f4f4;
+    background: #f9fafb; /* Updated background to match admindb */
 }
 
 /* Navbar */
@@ -90,7 +149,7 @@ body {
     display: inline-block;
     color: white;
 }
-.dropdown-toggle:hover .dropdown-menu {
+.dropdown:hover .dropdown-menu {
     display: block;
 }
 .dropdown-menu {
@@ -117,93 +176,128 @@ body {
 }
 
 .container {
-    display: flex;
-    padding: 40px;
+    padding: 40px 60px; /* Adjusted padding to match admindb */
+    gap: 30px;
+}
+/* --- END Core Styles --- */
+
+/* --- Styles imported from admindb.php --- */
+
+.top-dashboard-grid {
+    display: grid;
+    grid-template-columns: 3fr 1fr; /* 3-part cards vs 1-part announcements */
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+/* Card Styling */
+.status-cards-wrapper {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: 20px;
-    justify-content: center;
 }
 
-.concerns-panel {
-    flex: 2.5;
+.dashboard-card {
     background: white;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    max-width: 650px;
-    overflow: hidden;
-    border: 1px solid black;
-}
-
-.concerns-header {
-    background: linear-gradient(135deg, #163a37, #1c4440, #275850, #1f9158);
-    color: white;
-    padding: 12px 0;
-    text-align: center;
-}
-
-.cards {
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); 
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-align: left;
     display: flex;
+    flex-direction: column;
     justify-content: space-between;
-    gap: 15px;
-    padding: 20px;
+    min-height: 120px;
+    border: 1px solid #e5e7eb;
 }
-.card {
-    flex: 1;
-    background: #f0f0f0;
-    border-radius: 10px;
-    padding: 20px;
-    text-align: center;
-    border: 1px solid black;
-    box-shadow: 1px 2px 4px rgba(0,0,0,0.2);
+
+.dashboard-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
 }
-.card h1 {
+
+.card-icon {
+    font-size: 24px;
+    opacity: 0.7;
+    margin-bottom: 10px;
+}
+
+.card-value {
+    font-size: 44px;
+    font-weight: 700;
     margin: 0;
-    font-size: 48px;
+    line-height: 1;
 }
-.card.total { color: #d32f2f; }
-.card.pending { color: #fbc02d; }
-.card.inprogress { color: #4caf50; }
-.card p {
-    margin: 10px 0 0 0;
-    font-weight: bold;
-    color: #333;
+
+.card-label {
+    font-size: 16px;
+    font-weight: 500;
+    color: #6b7280;
+    margin-top: 5px;
 }
+
+.card-total {
+    color: #275850;
+}
+.card-total .card-icon { color: #1f9158; }
+
+.card-pending {
+    background-color: #fffbeb;
+    color: #b45309;
+}
+.card-pending .card-icon { color: #f59e0b; }
+
+.card-inprogress {
+    background-color: #ecfdf5;
+    color: #047857;
+}
+.card-inprogress .card-icon { color: #10b981; }
 
 .announcements-panel {
-    flex: 1;
-    background: #e6e6e6;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    height: fit-content;
-    max-width: 250px;
-    border: 1px solid gray;
-}
-.announcements-panel h3 {
-    margin-top: 0;
-    font-size: 18px;
-    margin-bottom: 15px;
-}
-.announcement {
     background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    min-height: 200px;
+    border: 1px solid #e5e7eb;
+}
+
+.announcements-panel h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f9158;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 8px;
+}
+
+.announcement-item {
+    background: #f9fafb;
     border-radius: 8px;
-    padding: 12px 15px;
+    padding: 10px 15px;
     margin-bottom: 10px;
     text-align: left;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     font-size: 14px;
+    border-left: 3px solid #1f9158;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
-.announcement-title {
-    font-weight: bold;
-    color: #163a37;
-    margin-bottom: 5px;
+
+/* Responsive Adjustments */
+@media (max-width: 1024px) {
+    .top-dashboard-grid {
+        grid-template-columns: 2fr 1fr;
+    }
 }
-.announcement-date {
-    font-size: 12px;
-    color: #666;
-    margin-bottom: 8px;
-}
-.announcement-details {
-    color: #333;
+@media (max-width: 768px) {
+    .top-dashboard-grid {
+        grid-template-columns: 1fr; /* Stack cards and announcements */
+    }
+    .status-cards-wrapper {
+        grid-template-columns: 1fr; /* Stack cards vertically on mobile */
+    }
+    .container {
+        padding: 20px;
+    }
 }
 </style>
 </head>
@@ -231,30 +325,34 @@ body {
 </div>
 
 <div class="container">
-    <div class="concerns-panel">
-        <div class="concerns-header">
-            <h2>Concerns Status</h2>
-        </div>
-        <div class="cards">
-            <div class="card total">
-                <h1 id="totalComplaints">0</h1>
-                <p>Total Complaints</p>
-            </div>
-            <div class="card pending">
-                <h1 id="pendingComplaints">0</h1>
-                <p>Pending</p>
-            </div>
-            <div class="card inprogress">
-                <h1 id="inProgressComplaints">0</h1>
-                <p>In Progress</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="announcements-panel">
-        <h3>Announcements</h3>
-        <div id="announcementsContainer">
+    
+    <div class="top-dashboard-grid">
+        <div class="status-cards-wrapper">
             
+            <div class="dashboard-card card-total">
+                <div class="card-icon"><i class="fas fa-boxes"></i></div>
+                <h1 class="card-value"><?php echo $total; ?></h1>
+                <p class="card-label">Total Concerns</p>
+            </div>
+            
+            <div class="dashboard-card card-pending">
+                <div class="card-icon"><i class="fas fa-clock"></i></div>
+                <h1 class="card-value"><?php echo $pending; ?></h1>
+                <p class="card-label">Pending</p>
+            </div>
+            
+            <div class="dashboard-card card-inprogress">
+                <div class="card-icon"><i class="fas fa-tasks"></i></div>
+                <h1 class="card-value"><?php echo $inProgress; ?></h1>
+                <p class="card-label">In Progress</p>
+            </div>
+        </div>
+
+        <div class="announcements-panel">
+            <h3>Announcements</h3>
+            <div id="announcementsContainer">
+                <div class="announcement-item">Loading announcements...</div>
+            </div>
         </div>
     </div>
 </div>
@@ -263,40 +361,27 @@ body {
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
 
 <script>
-// Function to fetch and update concerns data
-function updateConcernsData() {
-    fetch('get_concerns_data.php')
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('totalComplaints').textContent = data.total || 0;
-            document.getElementById('pendingComplaints').textContent = data.pending || 0;
-            document.getElementById('inProgressComplaints').textContent = data.inProgress || 0;
-        })
-        .catch(error => {
-            console.error('Error fetching concerns data:', error);
-        });
-}
-
-// Function to fetch and display announcements
+// Function to fetch and display announcements (MODIFIED to use admindb style)
 function loadAnnouncements() {
-    fetch('get_announcement.php')
+    fetch('get_announcement.php') // Revert to your original file name
         .then(response => response.json())
         .then(announcements => {
             const container = document.getElementById('announcementsContainer');
             container.innerHTML = '';
             
             if (announcements.length === 0) {
-                container.innerHTML = '<div class="announcement">No announcements yet.</div>';
+                container.innerHTML = '<div class="announcement-item text-muted">No announcements yet.</div>';
                 return;
             }
             
             announcements.forEach(announcement => {
                 const announcementDiv = document.createElement('div');
-                announcementDiv.className = 'announcement';
+                announcementDiv.className = 'announcement-item';
+                // Using the admindb style for the inner HTML structure
                 announcementDiv.innerHTML = `
-                    <div class="announcement-title">${announcement.title}</div>
-                    <div class="announcement-date">${announcement.date}</div>
-                    <div class="announcement-details">${announcement.details}</div>
+                    <div class="fw-bold" style="color:#275850;">${announcement.title || 'No Title'}</div>
+                    <div class="text-muted small mb-1" style="font-size:11px;">${announcement.date || 'Unknown Date'}</div>
+                    <div style="color:#6b7280;">${announcement.details || 'No details provided.'}</div>
                 `;
                 container.appendChild(announcementDiv);
             });
@@ -304,16 +389,14 @@ function loadAnnouncements() {
         .catch(error => {
             console.error('Error loading announcements:', error);
             document.getElementById('announcementsContainer').innerHTML = 
-                '<div class="announcement">Error loading announcements.</div>';
+                '<div class="announcement-item text-danger">Error loading announcements.</div>';
         });
 }
 
-// Update data immediately when page loads
-updateConcernsData();
+// Data is now loaded via PHP, only load announcements via AJAX
 loadAnnouncements();
 
-// Update data every 30 seconds
-setInterval(updateConcernsData, 30000);
+// Update announcements data every 30 seconds
 setInterval(loadAnnouncements, 30000);
 </script>
 
