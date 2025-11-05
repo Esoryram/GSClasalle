@@ -14,7 +14,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['feedback_id'], $_POST
     $response = trim($_POST['response']);
 
     if (!empty($response)) {
-        $stmt = $conn->prepare("UPDATE Feedback SET Admin_Response = ?, Date_Responded = NOW() WHERE FeedbackID = ?");
+        $stmt = $conn->prepare(
+            "UPDATE Feedback SET Admin_Response = ?, Date_Responded = NOW() WHERE FeedbackID = ?"
+        );
         $stmt->bind_param("si", $response, $feedback_id);
         $stmt->execute();
     }
@@ -141,7 +143,7 @@ body {
                         <td><?= $row['Date_Submitted'] ?></td>
                         <td><?= htmlspecialchars($row['Admin_Response'] ?? 'No response yet') ?></td>
                         <td>
-                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#responseModal<?= $row['FeedbackID'] ?>">Respond</button>
+                            <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#responseModal<?= $row['FeedbackID'] ?>">Respond</button>
 
                             <!-- Modal -->
                             <div class="modal fade" id="responseModal<?= $row['FeedbackID'] ?>" tabindex="-1" aria-labelledby="modalLabel<?= $row['FeedbackID'] ?>" aria-hidden="true">
