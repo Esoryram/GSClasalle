@@ -69,8 +69,8 @@ $announcementsResult = mysqli_query($conn, $announcementsQuery);
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-
     <style>
+        /* Keep your existing CSS styles here */
         body {
             margin: 0;
             font-family: 'Inter', sans-serif;
@@ -366,7 +366,6 @@ $announcementsResult = mysqli_query($conn, $announcementsQuery);
         }
     </style>
 </head>
-
 <body>
     <div class="navbar">
         <div class="logo">
@@ -385,14 +384,47 @@ $announcementsResult = mysqli_query($conn, $announcementsQuery);
             <span class="username"><?php echo htmlspecialchars($name); ?></span>
             <span class="dropdown-toggle">
                 <div class="dropdown-menu">
-                    <a href="#">Change Password</a>
+                    <a href="#" id="changePasswordLink">Change Password</a>
                     <a href="login.php">Logout</a>
                 </div>
             </span>
         </div>
     </div>
 
+    <!-- Change Password Modal -->
+    <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header" style="background-color:#1f9158; color:white;">
+            <h5 class="modal-title" id="changePasswordLabel">Change Password</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="changePasswordForm">
+              <div class="mb-3">
+                <label for="currentPassword" class="form-label">Current Password</label>
+                <input type="password" class="form-control" id="currentPassword" required>
+              </div>
+              <div class="mb-3">
+                <label for="newPassword" class="form-label">New Password</label>
+                <input type="password" class="form-control" id="newPassword" required>
+              </div>
+              <div class="mb-3">
+                <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                <input type="password" class="form-control" id="confirmPassword" required>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-success" id="savePasswordBtn">Change Password</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="container">
+        <!-- Keep your existing dashboard content here (status cards, announcements, recent concerns) -->
         <div class="top-dashboard-grid">
             <!-- Status Cards -->
             <div class="status-cards-wrapper">
@@ -510,5 +542,48 @@ $announcementsResult = mysqli_query($conn, $announcementsQuery);
             </div>
         </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+    <script>
+    // Open modal when clicking "Change Password"
+    document.getElementById('changePasswordLink').addEventListener('click', e => {
+        e.preventDefault();
+        new bootstrap.Modal(document.getElementById('changePasswordModal')).show();
+    });
+
+    document.getElementById('savePasswordBtn').addEventListener('click', () => {
+        const currentPassword = document.getElementById('currentPassword').value.trim();
+        const newPassword = document.getElementById('newPassword').value.trim();
+        const confirmPassword = document.getElementById('confirmPassword').value.trim();
+
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            Swal.fire('Error', 'Please fill in all fields.', 'error');
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            Swal.fire('Error', 'New password and confirmation do not match.', 'error');
+            return;
+        }
+
+        fetch('change_password.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({currentPassword, newPassword})
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success){
+                Swal.fire('Success', data.message, 'success');
+                bootstrap.Modal.getInstance(document.getElementById('changePasswordModal')).hide();
+                document.getElementById('changePasswordForm').reset();
+            } else {
+                Swal.fire('Error', data.message, 'error');
+            }
+        })
+        .catch(() => Swal.fire('Error', 'Something went wrong.', 'error'));
+    });
+    </script>
 </body>
 </html>

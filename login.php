@@ -25,6 +25,7 @@ if (isset($_POST['login'])) {
 
         // ✅ FIXED: use password_verify for hashed passwords
         if (password_verify($password, $user['Password'])) {
+            $_SESSION['accountID'] = $user['AccountID'];
             $_SESSION['username'] = $user['Username'];
             $_SESSION['name'] = $user['Name'];
             $_SESSION['role'] = $user['Role'];

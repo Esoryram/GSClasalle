@@ -246,7 +246,7 @@ body {
         <span class="username"><?php echo htmlspecialchars($name); ?></span>
         <span class="dropdown-toggle">
             <div class="dropdown-menu">
-                <a href="#">Change Password</a>
+                <a href="#" data-bs-toggle="modal" data-bs-target="#changePasswordModal">Change Password</a>
                 <a href="user_archived.php">Archived Concerns</a>
                 <a href="login.php">Logout</a>
             </div>
@@ -355,6 +355,70 @@ setInterval(loadAnnouncements, 30000); // auto-refresh every 30 seconds
     </div>
   </div>
 </div>
+
+ <!-- Change Password Modal -->
+    <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header" style="background-color:#1f9158; color:white;">
+            <h5 class="modal-title" id="changePasswordLabel">Change Password</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="changePasswordForm">
+              <div class="mb-3">
+                <label for="currentPassword" class="form-label">Current Password</label>
+                <input type="password" class="form-control" id="currentPassword" required>
+              </div>
+              <div class="mb-3">
+                <label for="newPassword" class="form-label">New Password</label>
+                <input type="password" class="form-control" id="newPassword" required>
+              </div>
+              <div class="mb-3">
+                <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                <input type="password" class="form-control" id="confirmPassword" required>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-success" id="savePasswordBtn">Change Password</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+
+<script>
+document.getElementById('changePasswordForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+
+    if(newPassword !== confirmPassword){
+        Swal.fire('Error','Passwords do not match!','error');
+        return;
+    }
+
+    fetch('change_password.php', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({currentPassword,newPassword})
+    })
+    .then(res => res.json())
+    .then(data => {
+        Swal.fire(data.success ? 'Success':'Error', data.message, data.success?'success':'error');
+        if(data.success){
+            document.getElementById('changePasswordForm').reset();
+            bootstrap.Modal.getInstance(document.getElementById('changePasswordModal')).hide();
+        }
+    })
+    .catch(()=> Swal.fire('Error','Something went wrong.','error'));
+});
+</script>
 
 </body>
 </html>
