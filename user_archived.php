@@ -14,8 +14,7 @@ $name = isset($_SESSION['name']) ? $_SESSION['name'] : $username;
 if (isset($_GET['return'])) {
     $returnPage = $_GET['return'];
 } else {
-    $referrer = basename($_SERVER['HTTP_REFERER']); // e.g., 'userdb.php' or 'userconcerns.php'
-
+    $referrer = isset($_SERVER['HTTP_REFERER']) ? basename($_SERVER['HTTP_REFERER']) : '';
     if ($referrer === 'userconcerns.php') {
         $returnPage = 'userconcerns.php';
     } else {
@@ -31,15 +30,15 @@ $stmt->execute();
 $userResult = $stmt->get_result();
 $userRow = $userResult->fetch_assoc();
 $accountID = $userRow ? $userRow['AccountID'] : 0;
+$stmt->close();
 
-// Get only completed concerns of the logged-in user
-$concernsQuery = "SELECT * FROM Concerns WHERE AccountID = ? AND Status = 'Completed' ORDER BY Concern_Date DESC";
+// Get only completed or cancelled concerns of the logged-in user
+$concernsQuery = "SELECT * FROM Concerns WHERE AccountID = ? AND (Status = 'Completed' OR Status = 'Cancelled') ORDER BY Concern_Date DESC";
 $stmt2 = $conn->prepare($concernsQuery);
 $stmt2->bind_param("i", $accountID);
 $stmt2->execute();
 $concernsResult = $stmt2->get_result();
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -190,11 +189,6 @@ body {
     margin-left: 280px;
 }
 
-.status-completed {
-    background: #d1edff;
-    color: #0c5460;
-}
-
 /* Concern Fields */
 .form-field {
     margin-bottom: 15px;
@@ -238,6 +232,22 @@ body {
 .feedback-btn:hover {
     background: #218838;
 }
+
+.status-completed {
+    background: #d1edff;
+    color: #0c5460;
+}
+.status-cancelled {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.badge {
+    border-radius: 0.75rem;
+    padding: 6px 10px;
+    font-size: 0.8rem;
+}
+
 </style>
 </head>
 <body>
@@ -249,7 +259,7 @@ body {
          <img src="img/LSULogo.png" alt="LSU Logo">
         <h2>Archived Concerns</h2>
     </div>
-    <button class="return-btn" onclick="window.location.href='<?= htmlspecialchars($returnPage) ?>'">
+    <button class="return-btn" onclick="window.location.href='<?php echo htmlspecialchars($returnPage); ?>'">
         Return
     </button>
 </div>
@@ -268,22 +278,33 @@ body {
 
         <div class="accordion" id="concernsAccordion">
             <?php
-            if ($concernsResult->num_rows > 0) {
+            if ($concernsResult && $concernsResult->num_rows > 0) {
                 $index = 1;
                 while ($row = $concernsResult->fetch_assoc()) {
                     $status = isset($row['Status']) ? $row['Status'] : 'Completed';
-                    $statusClass = strtolower(str_replace(' ', '', $status));
                     $date = date("l, d M Y", strtotime($row['Concern_Date']));
                     $concernID = $row['ConcernID'];
+
+                    // status classes only for archived page (Completed / Cancelled)
+                    switch ($row['Status']) {
+                        case 'Completed':
+                            $statusClass = 'bg-success text-white';
+                            break;
+                        case 'Cancelled':
+                            $statusClass = 'bg-secondary text-white';
+                            break;
+                        default:
+                            $statusClass = 'bg-light text-dark';
+                    }
                     ?>
                     <div class="accordion-item">
                         <h2 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" 
                                 data-bs-toggle="collapse" data-bs-target="#concern<?= $index ?>" 
                                 aria-expanded="false">
-                                <?= $date ?> 
-                                <span class="status-badge status-<?= $statusClass ?>">
-                                    <?= htmlspecialchars($status) ?>
+                                <?= $date ?>
+                                <span class="badge <?php echo $statusClass; ?>" style="margin-left:10px;">
+                                    <?php echo htmlspecialchars($row['Status']); ?>
                                 </span>
                             </button>
                             <button class="feedback-btn" 

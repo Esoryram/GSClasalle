@@ -3,7 +3,7 @@ session_start();
 include("config.php");
 
 if (!isset($_SESSION['username'])) {
-    header("Location: index.php");
+    header("Location: login.php");
     exit();
 }
 
@@ -244,12 +244,13 @@ body {
 
     <div class="dropdown">
         <span class="username"><?php echo htmlspecialchars($name); ?></span>
-
-        <div class="dropdown-menu">
-            <a href="#">Change Password</a>
-            <a href="user_archived.php">Archived Concerns</a>
-            <a href="login.php">Logout</a>
-        </div>
+        <span class="dropdown-toggle">
+            <div class="dropdown-menu">
+                <a href="#">Change Password</a>
+                <a href="user_archived.php">Archived Concerns</a>
+                <a href="login.php">Logout</a>
+            </div>
+        </span>
     </div>
 </div>
 
@@ -300,19 +301,19 @@ function loadAnnouncements() {
             container.innerHTML = '';
 
             if (!announcements.length) {
-                container.innerHTML = '<div class="announcement-item text-muted">No announcements yet.</div>';
+                container.innerHTML = '<div class="announcement-item text-muted">No active announcements.</div>';
                 return;
             }
 
             announcements.forEach(a => {
-                const div = document.createElement('div');
-                div.className = 'announcement-item';
-                div.innerHTML = `
+                const btn = document.createElement('button');
+                btn.className = 'announcement-item w-100 text-start border-0 bg-transparent';
+                btn.innerHTML = `
                     <div class="fw-bold" style="color:#275850;">${a.title}</div>
                     <div class="text-muted small mb-1" style="font-size:11px;">${a.date}</div>
-                    <div style="color:#374151;">${a.details}</div>
                 `;
-                container.appendChild(div);
+                btn.addEventListener('click', () => showAnnouncementModal(a));
+                container.appendChild(btn);
             });
         })
         .catch(() => {
@@ -321,9 +322,39 @@ function loadAnnouncements() {
         });
 }
 
+function showAnnouncementModal(a) {
+    const modalTitle = document.getElementById('announcementModalLabel');
+    const modalBody = document.getElementById('announcementModalBody');
+
+    modalTitle.textContent = a.title;
+    modalBody.innerHTML = `
+        <p class="text-muted" style="font-size:13px;">Posted on ${a.date}</p>
+        <div style="white-space:pre-line;">${a.details}</div>
+    `;
+
+    const modal = new bootstrap.Modal(document.getElementById('announcementModal'));
+    modal.show();
+}
+
 loadAnnouncements();
-setInterval(loadAnnouncements, 30000);
+setInterval(loadAnnouncements, 30000); // auto-refresh every 30 seconds
 </script>
+
+<!-- Announcement Modal -->
+<div class="modal fade" id="announcementModal" tabindex="-1" aria-labelledby="announcementModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header" style="background-color:#1f9158; color:white;">
+        <h5 class="modal-title" id="announcementModalLabel">Announcement</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="announcementModalBody" style="font-size:14px;"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-success" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>

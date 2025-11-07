@@ -3,23 +3,26 @@ session_start();
 include("config.php");
 
 if (!isset($_SESSION['username'])) {
-    header("Location: index.php");
+    header("Location: login.php");
     exit();
 }
 
-$username = $_SESSION['username'];
-$name = isset($_SESSION['name']) ? $_SESSION['name'] : $username;
+$username   = $_SESSION['username'];
+$name       = isset($_SESSION['name']) ? $_SESSION['name'] : $username;
 $activePage = "reports";
 
-$filterRoom = isset($_GET['room']) ? mysqli_real_escape_string($conn, $_GET['room']) : '';
+$filterRoom       = isset($_GET['room']) ? mysqli_real_escape_string($conn, $_GET['room']) : '';
 $filterAssignedTo = isset($_GET['assigned']) ? mysqli_real_escape_string($conn, $_GET['assigned']) : '';
-$filterStatus = isset($_GET['status']) ? mysqli_real_escape_string($conn, $_GET['status']) : '';
-$generateClicked = isset($_GET['generate']); // Check if Generate button was clicked
+$filterStatus     = isset($_GET['status']) ? mysqli_real_escape_string($conn, $_GET['status']) : '';
+$filterDateFrom   = isset($_GET['date_from']) ? mysqli_real_escape_string($conn, $_GET['date_from']) : '';
+$filterDateTo     = isset($_GET['date_to']) ? mysqli_real_escape_string($conn, $_GET['date_to']) : '';
+$generateClicked  = isset($_GET['generate']); // Check if Generate button was clicked
 
 // Fetch unique room numbers for the dropdown
-$roomsQuery = "SELECT DISTINCT Room FROM Concerns WHERE Room IS NOT NULL AND Room != '' ORDER BY Room ASC";
+$roomsQuery  = "SELECT DISTINCT Room FROM Concerns WHERE Room IS NOT NULL AND Room != '' ORDER BY Room ASC";
 $roomsResult = mysqli_query($conn, $roomsQuery);
 $roomOptions = [];
+
 if ($roomsResult) {
     while ($row = mysqli_fetch_assoc($roomsResult)) {
         $roomOptions[] = $row['Room'];
@@ -27,9 +30,10 @@ if ($roomsResult) {
 }
 
 // Fetch unique assigned personnel
-$assignedToQuery = "SELECT DISTINCT Assigned_to FROM Concerns WHERE Assigned_to IS NOT NULL AND Assigned_to != '' ORDER BY Assigned_to ASC";
+$assignedToQuery  = "SELECT DISTINCT Assigned_to FROM Concerns WHERE Assigned_to IS NOT NULL AND Assigned_to != '' ORDER BY Assigned_to ASC";
 $assignedToResult = mysqli_query($conn, $assignedToQuery);
-$assignedOptions = [];
+$assignedOptions  = [];
+
 if ($assignedToResult) {
     while ($row = mysqli_fetch_assoc($assignedToResult)) {
         $assignedOptions[] = $row['Assigned_to'];
@@ -52,7 +56,7 @@ if ($generateClicked) {
             c.Assigned_to
         FROM Concerns c
         LEFT JOIN Accounts a ON c.AccountID = a.AccountID
-        WHERE 1=1 
+        WHERE 1=1
     ";
 
     if (!empty($filterRoom) && $filterRoom !== 'All Rooms') {
@@ -63,6 +67,13 @@ if ($generateClicked) {
     }
     if (!empty($filterStatus) && $filterStatus !== 'All Statuses') {
         $query .= " AND c.Status = '$filterStatus'";
+    }
+    if (!empty($filterDateFrom) && !empty($filterDateTo)) {
+        $query .= " AND DATE(c.Concern_Date) BETWEEN '$filterDateFrom' AND '$filterDateTo'";
+    } elseif (!empty($filterDateFrom)) {
+        $query .= " AND DATE(c.Concern_Date) >= '$filterDateFrom'";
+    } elseif (!empty($filterDateTo)) {
+        $query .= " AND DATE(c.Concern_Date) <= '$filterDateTo'";
     }
 
     $query .= " ORDER BY c.ConcernID ASC";
@@ -84,7 +95,11 @@ if ($generateClicked) {
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 <style>
-body { background-color: white; font-family: Arial, sans-serif; margin: 0; }
+body {
+    background-color: white;
+    font-family: Arial, sans-serif;
+    margin: 0;
+}
 
 .navbar {
     display: flex;
@@ -93,16 +108,58 @@ body { background-color: white; font-family: Arial, sans-serif; margin: 0; }
     padding: 15px 30px;
     color: white;
 }
-.logo { display: flex; align-items: center; margin-right: 25px; }
-.logo img { height: 40px; width: auto; }
-.navbar .links { display: flex; gap: 20px; margin-right: auto; }
-.navbar .links a { color: white; text-decoration: none; font-weight: bold; padding: 6px 12px; border-radius: 5px; transition: 0.3s; }
-.navbar .links a.active { background-color: #4ba06f; }
-.navbar .links a:hover { background-color: #107040; }
 
-.dropdown { position: relative; display: flex; align-items: center; gap: 5px; }
-.dropdown .username { font-weight: bold; font-size: 16px; padding: 6px 12px; }
-.dropdown:hover .dropdown-menu { display: block; }
+.logo {
+    display: flex;
+    align-items: center;
+    margin-right: 25px;
+}
+
+.logo img {
+    height: 40px;
+    width: auto;
+}
+
+.navbar .links {
+    display: flex;
+    gap: 20px;
+    margin-right: auto;
+}
+
+.navbar .links a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    padding: 6px 12px;
+    border-radius: 5px;
+    transition: 0.3s;
+}
+
+.navbar .links a.active {
+    background-color: #4ba06f;
+}
+
+.navbar .links a:hover {
+    background-color: #107040;
+}
+
+.dropdown {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.dropdown .username {
+    font-weight: bold;
+    font-size: 16px;
+    padding: 6px 12px;
+}
+
+.dropdown:hover .dropdown-menu {
+    display: block;
+}
+
 .dropdown-menu {
     display: none;
     position: absolute;
@@ -115,34 +172,117 @@ body { background-color: white; font-family: Arial, sans-serif; margin: 0; }
     overflow: hidden;
     z-index: 10;
 }
-.dropdown-menu a { display: block; padding: 12px 16px; text-decoration: none; color: #333; font-size: 14px; }
-.dropdown-menu a:hover { background-color: #f1f1f1; }
 
-.page-container { padding: 30px 40px; }
-.report-controls { display: flex; align-items: center; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; }
-.input-filter-width { width: 150px !important; padding: 10px 15px; font-weight: bold; border-radius: 8px; border: 1px solid #ced4da; background-color: white; font-size: 16px; }
+.dropdown-menu a {
+    display: block;
+    padding: 12px 16px;
+    text-decoration: none;
+    color: #333;
+    font-size: 14px;
+}
+
+.dropdown-menu a:hover {
+    background-color: #f1f1f1;
+}
+
+.page-container {
+    padding: 30px 40px;
+}
+
+.report-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+}
+
+.input-filter-width {
+    width: 150px !important;
+    padding: 10px 15px;
+    font-weight: bold;
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    background-color: white;
+    font-size: 16px;
+}
 
 .btn-generate {
-    background-color: #198754; color: white; padding: 10px 20px; font-weight: bold; border-radius: 8px; border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: background-color 0.3s; margin-left: auto;
+    background-color: #198754;
+    color: white;
+    padding: 10px 20px;
+    font-weight: bold;
+    border-radius: 8px;
+    border: none;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transition: background-color 0.3s;
+    margin-left: auto;
 }
-.btn-generate:hover { background-color: #146c43; }
+
+.btn-generate:hover {
+    background-color: #146c43;
+}
 
 .btn-print {
-    position: fixed; bottom: 20px; right: 40px;
-    background-color: #198754; color: white; padding: 5px 40px; font-weight: bold; border-radius: 8px; border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.2); cursor: pointer; transition: background-color 0.3s; z-index: 1000;
+    position: fixed;
+    bottom: 20px;
+    right: 40px;
+    background-color: #198754;
+    color: white;
+    padding: 5px 40px;
+    font-weight: bold;
+    border-radius: 8px;
+    border: none;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    cursor: pointer;
+    transition: background-color 0.3s;
+    z-index: 1000;
 }
-.btn-print:hover { background-color: #146c43; }
 
-@media print { .btn-print, .btn-generate, .report-controls, .navbar { display: none !important; } }
+.btn-print:hover {
+    background-color: #146c43;
+}
 
-.table-container { border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-.table thead { background-color: #198754; color: white; }
-.table-bordered { border: 1px solid #dee2e6; }
+@media print {
+    .btn-print,
+    .btn-generate,
+    .report-controls,
+    .navbar {
+        display: none !important;
+    }
+}
+
+.table-container {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.table thead {
+    background-color: #198754;
+    color: white;
+}
+
+.table-bordered {
+    border: 1px solid #dee2e6;
+}
 
 .refresh-btn {
-    display: flex; align-items: center; justify-content: center; border: none; background: transparent; color: #198754; font-size: 20px; cursor: pointer; margin-left: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: #198754;
+    font-size: 20px;
+    cursor: pointer;
+    margin-left: 5px;
 }
-.refresh-btn:hover { color: #146c43; }
+
+.refresh-btn:hover {
+    color: #146c43;
+}
 </style>
 </head>
 <body>
@@ -152,14 +292,14 @@ body { background-color: white; font-family: Arial, sans-serif; margin: 0; }
         <img src="img/LSULogo.png" alt="LSU Logo">
     </div>
     <div class="links">
-        <a href="admindb.php" class="<?php echo ($activePage=="dashboard")?"active":""; ?>">Dashboard</a>
-        <a href="adminconcerns.php" class="<?php echo ($activePage=="concerns")?"active":""; ?>">Concerns</a>
-        <a href="adminreports.php" class="<?php echo ($activePage=="reports")?"active":""; ?>">Reports</a>
-        <a href="adminfeedback.php" class="<?php echo ($activePage=="feedback")?"active":""; ?>">Feedback</a>
-        <a href="adminannouncement.php" class="<?php echo ($activePage=="announcements")?"active":""; ?>">Announcements</a>
+        <a href="admindb.php" class="<?= ($activePage == 'dashboard') ? 'active' : ''; ?>">Dashboard</a>
+        <a href="adminconcerns.php" class="<?= ($activePage == 'concerns') ? 'active' : ''; ?>">Concerns</a>
+        <a href="adminreports.php" class="<?= ($activePage == 'reports') ? 'active' : ''; ?>">Reports</a>
+        <a href="adminfeedback.php" class="<?= ($activePage == 'feedback') ? 'active' : ''; ?>">Feedback</a>
+        <a href="adminannouncement.php" class="<?= ($activePage == 'announcements') ? 'active' : ''; ?>">Announcements</a>
     </div>
     <div class="dropdown">
-        <span class="username"><?php echo htmlspecialchars($name); ?></span>
+        <span class="username"><?= htmlspecialchars($name); ?></span>
         <span class="dropdown-toggle">
             <div class="dropdown-menu">
                 <a href="#">Change Password</a>
@@ -173,31 +313,50 @@ body { background-color: white; font-family: Arial, sans-serif; margin: 0; }
     <form method="GET" action="adminreports.php">
         <input type="hidden" name="generate" value="1">
         <div class="report-controls">
+
             <!-- Room Dropdown -->
             <select class="form-select input-filter-width" name="room">
-                <option value="All Rooms" <?php echo ($filterRoom == 'All Rooms' || $filterRoom == '') ? 'selected' : ''; ?>>Room</option>
+                <option value="All Rooms" <?= ($filterRoom == 'All Rooms' || $filterRoom == '') ? 'selected' : ''; ?>>Room</option>
                 <?php foreach ($roomOptions as $room): ?>
-                    <option value="<?php echo htmlspecialchars($room); ?>" <?php echo ($filterRoom == $room) ? 'selected' : ''; ?>><?php echo htmlspecialchars($room); ?></option>
+                    <option value="<?= htmlspecialchars($room); ?>" <?= ($filterRoom == $room) ? 'selected' : ''; ?>>
+                        <?= htmlspecialchars($room); ?>
+                    </option>
                 <?php endforeach; ?>
             </select>
 
             <!-- Assigned To Dropdown -->
             <select class="form-select input-filter-width" name="assigned">
-                <option value="All Personnel" <?php echo ($filterAssignedTo == 'All Personnel' || $filterAssignedTo == '') ? 'selected' : ''; ?>>Assigned To</option>
+                <option value="All Personnel" <?= ($filterAssignedTo == 'All Personnel' || $filterAssignedTo == '') ? 'selected' : ''; ?>>Assigned To</option>
                 <?php foreach ($assignedOptions as $person): ?>
-                    <option value="<?php echo htmlspecialchars($person); ?>" <?php echo ($filterAssignedTo == $person) ? 'selected' : ''; ?>><?php echo htmlspecialchars($person); ?></option>
+                    <option value="<?= htmlspecialchars($person); ?>" <?= ($filterAssignedTo == $person) ? 'selected' : ''; ?>>
+                        <?= htmlspecialchars($person); ?>
+                    </option>
                 <?php endforeach; ?>
             </select>
 
-            <!-- Status Dropdown with Refresh -->
-            <div style="display: flex; align-items: center;">
-                <select class="form-select input-filter-width" name="status">
-                    <option value="All Statuses" <?php echo ($filterStatus == 'All Statuses' || $filterStatus == '') ? 'selected' : ''; ?>>Status</option>
-                    <option value="Pending" <?php echo ($filterStatus == 'Pending') ? 'selected' : ''; ?>>Pending</option>
-                    <option value="In Progress" <?php echo ($filterStatus == 'In Progress') ? 'selected' : ''; ?>>In Progress</option>
-                    <option value="Completed" <?php echo ($filterStatus == 'Completed') ? 'selected' : ''; ?>>Completed</option>
-                    <option value="Cancelled" <?php echo ($filterStatus == 'Cancelled') ? 'selected' : ''; ?>>Cancelled</option>
-                </select>
+            <!-- Status Dropdown -->
+            <select class="form-select input-filter-width" name="status">
+                <option value="All Statuses" <?= ($filterStatus == 'All Statuses' || $filterStatus == '') ? 'selected' : ''; ?>>Status</option>
+                <option value="Pending" <?= ($filterStatus == 'Pending') ? 'selected' : ''; ?>>Pending</option>
+                <option value="In Progress" <?= ($filterStatus == 'In Progress') ? 'selected' : ''; ?>>In Progress</option>
+                <option value="Completed" <?= ($filterStatus == 'Completed') ? 'selected' : ''; ?>>Completed</option>
+                <option value="Cancelled" <?= ($filterStatus == 'Cancelled') ? 'selected' : ''; ?>>Cancelled</option>
+            </select>
+
+            <!-- Date Filter -->
+            <?php $today = date('Y-m-d'); ?>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="date" name="date_from" class="form-control input-filter-width"
+                       max="<?= $today; ?>"
+                       value="<?= isset($_GET['date_from']) ? htmlspecialchars($_GET['date_from']) : ''; ?>"
+                       placeholder="From Date">
+                <span style="font-weight: bold;">to</span>
+                <input type="date" name="date_to" class="form-control input-filter-width"
+                       max="<?= $today; ?>"
+                       value="<?= isset($_GET['date_to']) ? htmlspecialchars($_GET['date_to']) : ''; ?>"
+                       placeholder="To Date">
+
+                <!-- Refresh Button -->
                 <button type="button" class="refresh-btn" title="Reset Filters" onclick="window.location.href='adminreports.php'">
                     <i class="fas fa-sync-alt" style="font-size: 30px;"></i>
                 </button>
@@ -232,32 +391,36 @@ body { background-color: white; font-family: Arial, sans-serif; margin: 0; }
                         <?php if (!empty($concernsData)): ?>
                             <?php foreach ($concernsData as $row): ?>
                                 <tr>
-                                    <td><?php echo $row['ConcernID']; ?></td>
-                                    <td><?php echo htmlspecialchars($row['Concern_Title']); ?></td>
-                                    <td><?php echo htmlspecialchars($row['Room']); ?></td>
-                                    <td><?php echo htmlspecialchars($row['Problem_Type']); ?></td>
-                                    <td><?php echo htmlspecialchars($row['Priority']); ?></td>
-                                    <td><?php echo htmlspecialchars($row['Concern_Date']); ?></td>
+                                    <td><?= $row['ConcernID']; ?></td>
+                                    <td><?= htmlspecialchars($row['Concern_Title']); ?></td>
+                                    <td><?= htmlspecialchars($row['Room']); ?></td>
+                                    <td><?= htmlspecialchars($row['Problem_Type']); ?></td>
+                                    <td><?= htmlspecialchars($row['Priority']); ?></td>
+                                    <td><?= htmlspecialchars($row['Concern_Date']); ?></td>
                                     <td>
                                         <?php 
-                                        $statusClass = '';
-                                        switch ($row['Status']) {
-                                            case 'Completed': $statusClass = 'bg-success'; break;
-                                            case 'In Progress': $statusClass = 'bg-warning text-dark'; break;
-                                            case 'Pending': $statusClass = 'bg-danger'; break;
-                                            case 'Cancelled': $statusClass = 'bg-secondary'; break;
-                                            default: $statusClass = 'bg-info';
-                                        }
+                                            $statusClass = '';
+                                            switch ($row['Status']) {
+                                                case 'Completed':   $statusClass = 'bg-success'; break;
+                                                case 'In Progress': $statusClass = 'bg-warning text-dark'; break;
+                                                case 'Pending':     $statusClass = 'bg-danger'; break;
+                                                case 'Cancelled':   $statusClass = 'bg-secondary'; break;
+                                                default:            $statusClass = 'bg-info';
+                                            }
                                         ?>
-                                        <span class="badge <?php echo $statusClass; ?> rounded-pill px-2 py-1"><?php echo htmlspecialchars($row['Status']); ?></span>
+                                        <span class="badge <?= $statusClass; ?> rounded-pill px-2 py-1">
+                                            <?= htmlspecialchars($row['Status']); ?>
+                                        </span>
                                     </td>
-                                    <td><?php echo htmlspecialchars($row['ReportedBy']); ?></td>
-                                    <td><?php echo htmlspecialchars($row['Assigned_to']); ?></td>
+                                    <td><?= htmlspecialchars($row['ReportedBy']); ?></td>
+                                    <td><?= htmlspecialchars($row['Assigned_to']); ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="9" class="text-center text-muted py-4">No concerns found matching the current filters.</td>
+                                <td colspan="9" class="text-center text-muted py-4">
+                                    No concerns found matching the current filters.
+                                </td>
                             </tr>
                         <?php endif; ?>
                     </tbody>

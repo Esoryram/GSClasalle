@@ -1,4 +1,4 @@
-<?php
+<?php 
 session_start();
 include("config.php");
 
@@ -49,7 +49,13 @@ $recentConcernsQuery = "
 $recentResult = mysqli_query($conn, $recentConcernsQuery);
 
 // Fetch announcements
-$announcementsQuery = "SELECT Title, Content, Created_At FROM announcements ORDER BY Created_At DESC";
+$today = date('Y-m-d');
+$announcementsQuery = "
+    SELECT Title, Content, Created_At 
+    FROM announcements 
+    WHERE end_date > '$today' OR end_date IS NULL
+    ORDER BY Created_At DESC
+";
 $announcementsResult = mysqli_query($conn, $announcementsQuery);
 ?>
 
@@ -59,6 +65,7 @@ $announcementsResult = mysqli_query($conn, $announcementsQuery);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -66,8 +73,8 @@ $announcementsResult = mysqli_query($conn, $announcementsQuery);
     <style>
         body {
             margin: 0;
-            font-family: 'Inter', sans-serif; 
-            background: #f9fafb; 
+            font-family: 'Inter', sans-serif;
+            background: #f9fafb;
         }
 
         .navbar {
@@ -76,7 +83,7 @@ $announcementsResult = mysqli_query($conn, $announcementsQuery);
             background: linear-gradient(135deg, #163a37, #1c4440, #275850, #1f9158);
             padding: 15px 30px;
             color: white;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
 
         .logo {
@@ -140,7 +147,7 @@ $announcementsResult = mysqli_query($conn, $announcementsQuery);
             right: 0;
             background: white;
             min-width: 180px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             border-radius: 5px;
             overflow: hidden;
             z-index: 10;
@@ -174,7 +181,6 @@ $announcementsResult = mysqli_query($conn, $announcementsQuery);
             margin-bottom: 30px;
         }
 
-        /* Card Styling */
         .status-cards-wrapper {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -243,7 +249,6 @@ $announcementsResult = mysqli_query($conn, $announcementsQuery);
             color: #10b981;
         }
 
-        /* Announcements */
         .announcements-panel {
             background: white;
             border-radius: 12px;
@@ -293,7 +298,7 @@ $announcementsResult = mysqli_query($conn, $announcementsQuery);
             text-align: left;
             font-size: 14px;
             border-left: 3px solid #1f9158;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
 
         #announcementsContainer {
@@ -315,7 +320,6 @@ $announcementsResult = mysqli_query($conn, $announcementsQuery);
             background-color: #f0f0f0;
         }
 
-        /* Table */
         .recent-concerns-panel {
             background: white;
             border-radius: 12px;
@@ -351,148 +355,160 @@ $announcementsResult = mysqli_query($conn, $announcementsQuery);
             .top-dashboard-grid {
                 grid-template-columns: 1fr;
             }
+
             .status-cards-wrapper {
                 grid-template-columns: 1fr;
             }
+
             .container {
                 padding: 20px;
             }
         }
     </style>
 </head>
+
 <body>
-
-<div class="navbar">
-    <div class="logo">
-        <img src="img/LSULogo.png" alt="LSU Logo">
-    </div>
-    <div class="links">
-        <a href="admindb.php" class="active">Dashboard</a>
-        <a href="adminconcerns.php">Concerns</a>
-        <a href="adminreports.php">Reports</a>
-        <a href="adminfeedback.php">Feedback</a>
-        <a href="adminannouncement.php">Announcements</a>
-    </div>
-    <div class="dropdown">
-        <span class="username"><?php echo htmlspecialchars($name); ?></span>
-        <span class="dropdown-toggle">
-            <div class="dropdown-menu">
-                <a href="#">Change Password</a>
-                <a href="#">Help & Support</a>
-                <a href="login.php">Logout</a>
-            </div>
-        </span>
-    </div>
-</div>
-
-<div class="container">
-    <div class="top-dashboard-grid">
-        <!-- Status Cards -->
-        <div class="status-cards-wrapper">
-            <div class="dashboard-card card-total">
-                <div class="card-icon"><i class="fas fa-boxes"></i></div>
-                <h1 class="card-value"><?php echo $total; ?></h1>
-                <p class="card-label">Total Complaints</p>
-            </div>
-
-            <div class="dashboard-card card-pending">
-                <div class="card-icon"><i class="fas fa-clock"></i></div>
-                <h1 class="card-value"><?php echo $pending; ?></h1>
-                <p class="card-label">Pending</p>
-            </div>
-
-            <div class="dashboard-card card-inprogress">
-                <div class="card-icon"><i class="fas fa-tasks"></i></div>
-                <h1 class="card-value"><?php echo $inProgress; ?></h1>
-                <p class="card-label">In Progress</p>
-            </div>
+    <div class="navbar">
+        <div class="logo">
+            <img src="img/LSULogo.png" alt="LSU Logo">
         </div>
 
-        <!-- Announcements -->
-        <div class="announcements-panel">
-            <div class="announcements-header">
-                <h3>Announcements</h3>
-                <button class="add-btn" title="Add Announcement" onclick="window.location.href='adminannouncement.php'">
-                    <i class="fas fa-plus"></i>
-                </button>
-            </div>
-            <div id="announcementsContainer">
-                <?php
-                if ($announcementsResult && mysqli_num_rows($announcementsResult) > 0) {
-                    while ($a = mysqli_fetch_assoc($announcementsResult)) {
-                        echo '<div class="announcement-item">';
-                        echo '<div class="fw-bold" style="color:#275850;">' . htmlspecialchars($a['Title']) . '</div>';
-                        echo '<div class="text-muted small mb-1" style="font-size:11px;">' .
-                             (isset($a['Created_At']) ? date("F d, Y", strtotime($a['Created_At'])) : '') .
-                             '</div>';
-                        echo '<div style="color:#374151;">' . nl2br(htmlspecialchars($a['Content'])) . '</div>';
-                        echo '</div>';
-                    }
-                } else {
-                    echo '<div class="announcement-item text-muted">No announcements yet.</div>';
-                }
-                ?>
-            </div>
+        <div class="links">
+            <a href="admindb.php" class="active">Dashboard</a>
+            <a href="adminconcerns.php">Concerns</a>
+            <a href="adminreports.php">Reports</a>
+            <a href="adminfeedback.php">Feedback</a>
+            <a href="adminannouncement.php">Announcements</a>
+        </div>
+
+        <div class="dropdown">
+            <span class="username"><?php echo htmlspecialchars($name); ?></span>
+            <span class="dropdown-toggle">
+                <div class="dropdown-menu">
+                    <a href="#">Change Password</a>
+                    <a href="login.php">Logout</a>
+                </div>
+            </span>
         </div>
     </div>
 
-    <!-- Recent Concerns -->
-    <div class="recent-concerns-panel">
-        <h4>Recent Concerns</h4>
-        <div class="table-responsive mt-2">
-            <table class="table table-striped table-hover align-middle">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Title</th>
-                        <th>Room</th>
-                        <th>Type</th>
-                        <th>Priority</th>
-                        <th>Date</th>
-                        <th>Status</th>
-                        <th>Reported By</th>
-                        <th>Assigned To</th>
-                    </tr>
-                </thead>
-                <tbody>
+    <div class="container">
+        <div class="top-dashboard-grid">
+            <!-- Status Cards -->
+            <div class="status-cards-wrapper">
+                <div class="dashboard-card card-total">
+                    <div class="card-icon"><i class="fas fa-boxes"></i></div>
+                    <h1 class="card-value"><?php echo $total; ?></h1>
+                    <p class="card-label">Total Complaints</p>
+                </div>
+
+                <div class="dashboard-card card-pending">
+                    <div class="card-icon"><i class="fas fa-clock"></i></div>
+                    <h1 class="card-value"><?php echo $pending; ?></h1>
+                    <p class="card-label">Pending</p>
+                </div>
+
+                <div class="dashboard-card card-inprogress">
+                    <div class="card-icon"><i class="fas fa-tasks"></i></div>
+                    <h1 class="card-value"><?php echo $inProgress; ?></h1>
+                    <p class="card-label">In Progress</p>
+                </div>
+            </div>
+
+            <!-- Announcements -->
+            <div class="announcements-panel">
+                <div class="announcements-header">
+                    <h3>Announcements</h3>
+                    <button 
+                        class="add-btn" 
+                        title="Add Announcement" 
+                        onclick="window.location.href='adminannouncement.php'">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+
+                <div id="announcementsContainer">
                     <?php
-                    if ($recentResult && mysqli_num_rows($recentResult) > 0) {
-                        while ($row = mysqli_fetch_assoc($recentResult)) {
-                            echo "<tr>
-                                <td>{$row['ConcernID']}</td>
-                                <td>" . htmlspecialchars($row['Concern_Title']) . "</td>
-                                <td>" . htmlspecialchars($row['Room']) . "</td>
-                                <td>" . htmlspecialchars($row['Problem_Type']) . "</td>
-                                <td>" . htmlspecialchars($row['Priority']) . "</td>
-                                <td>" . htmlspecialchars(date('M d, Y', strtotime($row['Concern_Date']))) . "</td>
-                                <td>" . htmlspecialchars($row['Status']) . "</td>
-                                <td>" . htmlspecialchars($row['ReportedBy']) . "</td>
-                                <td>" . htmlspecialchars($row['Assigned_to']) . "</td>
-                            </tr>";
+                    if ($announcementsResult && mysqli_num_rows($announcementsResult) > 0) {
+                        while ($a = mysqli_fetch_assoc($announcementsResult)) {
+                            echo '<div class="announcement-item">';
+                            echo '<div class="fw-bold" style="color:#275850;">' . htmlspecialchars($a['Title']) . '</div>';
+                            echo '<div class="text-muted small mb-1" style="font-size:11px;">' .
+                                 (isset($a['Created_At']) ? date("F d, Y", strtotime($a['Created_At'])) : '') .
+                                 '</div>';
+                            echo '<div style="color:#374151;">' . nl2br(htmlspecialchars($a['Content'])) . '</div>';
+                            echo '</div>';
                         }
                     } else {
-                        echo '<tr><td colspan="9" class="text-center text-muted">No recent concerns found.</td></tr>';
+                        echo '<div class="announcement-item text-muted">No announcements yet.</div>';
                     }
                     ?>
-                </tbody>
-            </table>
+                </div>
+            </div>
         </div>
 
-        <div class="text-center mt-4">
-            <a href="adminconcerns.php" class="btn btn-lg" style="
-                background-color: #275850; 
-                color: white; 
-                font-weight: 600; 
-                border: none; 
-                border-radius: 8px; 
-                padding: 10px 25px; 
-                transition: 0.3s ease-in-out;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-                View All Concerns
-            </a>
+        <!-- Recent Concerns -->
+        <div class="recent-concerns-panel">
+            <h4>Recent Concerns</h4>
+
+            <div class="table-responsive mt-2">
+                <table class="table table-striped table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Room</th>
+                            <th>Type</th>
+                            <th>Priority</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Reported By</th>
+                            <th>Assigned To</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <?php
+                        if ($recentResult && mysqli_num_rows($recentResult) > 0) {
+                            while ($row = mysqli_fetch_assoc($recentResult)) {
+                                echo "<tr>
+                                    <td>{$row['ConcernID']}</td>
+                                    <td>" . htmlspecialchars($row['Concern_Title']) . "</td>
+                                    <td>" . htmlspecialchars($row['Room']) . "</td>
+                                    <td>" . htmlspecialchars($row['Problem_Type']) . "</td>
+                                    <td>" . htmlspecialchars($row['Priority']) . "</td>
+                                    <td>" . htmlspecialchars(date('M d, Y', strtotime($row['Concern_Date']))) . "</td>
+                                    <td>" . htmlspecialchars($row['Status']) . "</td>
+                                    <td>" . htmlspecialchars($row['ReportedBy']) . "</td>
+                                    <td>" . htmlspecialchars($row['Assigned_to']) . "</td>
+                                </tr>";
+                            }
+                        } else {
+                            echo '<tr><td colspan="9" class="text-center text-muted">No recent concerns found.</td></tr>';
+                        }
+                        ?>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="text-center mt-4">
+                <a 
+                    href="adminconcerns.php" 
+                    class="btn btn-lg" 
+                    style="
+                        background-color: #275850;
+                        color: white;
+                        font-weight: 600;
+                        border: none;
+                        border-radius: 8px;
+                        padding: 10px 25px;
+                        transition: 0.3s ease-in-out;
+                        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                    ">
+                    View All Concerns
+                </a>
+            </div>
         </div>
     </div>
-</div>
-
 </body>
 </html>

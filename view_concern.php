@@ -1,19 +1,17 @@
 <?php
 session_start();
-// Include the database configuration
 include("config.php"); 
 
 if (!isset($_SESSION['username'])) {
-    header("Location: index.php");
+    header("Location: login.php");
     exit();
 }
 
 $username = $_SESSION['username'];
 $name = isset($_SESSION['name']) ? $_SESSION['name'] : $username;
-$activePage = "concerns"; 
+$activePage = "concerns";
 
-
-// list of assignable staff (for the dropdown) this is TENTATIVE
+// list of assignable staff
 $assigneeOptions = [
     'Mr. Noronio', 
     'Ms. Cruz', 
@@ -23,37 +21,17 @@ $assigneeOptions = [
     'Facility Staff 3',
 ];
 
-//  options for dynamic status dropdown
+// status dropdown options
 $statusOptions = ['Pending', 'In Progress', 'Completed', 'Cancelled']; 
 
 $concernID = intval($_GET['id'] ?? 0);
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $concernID > 0) {
-    $newStatus = $_POST['status'] ?? '';
-    $newAssignee = $_POST['assigned_to'] ?? '';
-    
-    // update query
-    $updateQuery = "UPDATE Concerns SET Status = ?, Assigned_to = ? WHERE ConcernID = ?";
-    $updateStmt = $conn->prepare($updateQuery);
-    $updateStmt->bind_param("ssi", $newStatus, $newAssignee, $concernID);
-    
-    if ($updateStmt->execute()) {
-        $_SESSION['update_message'] = "Concern #{$concernID} updated successfully!";
-    } else {
-        $_SESSION['update_message'] = "Error updating concern: " . $conn->error;
-    }
-    
-    // Redirect to prevent form resubmission and display updated data
-    header("Location: view_concern.php?id=" . $concernID);
-    exit();
-}
-
-// --- Data Fetch ---
 if ($concernID === 0) {
     header("Location: adminconcerns.php");
     exit();
 }
 
+// Get Concern Data
 $query = "
     SELECT 
         c.ConcernID,
@@ -66,9 +44,13 @@ $query = "
         c.Concern_Date,
         c.Attachment,
         c.Assigned_to,
-        a.Name AS ReportedBy
+        a.Name AS ReportedBy,
+        e.EFID,
+        e.Type AS EquipmentType,
+        e.Room AS EquipmentRoom
     FROM Concerns c
     LEFT JOIN Accounts a ON c.AccountID = a.AccountID
+    LEFT JOIN equipmentfacilities e ON c.ConcernID = e.ConcernID
     WHERE c.ConcernID = ?
 ";
 
@@ -80,23 +62,54 @@ $concern = $result->fetch_assoc();
 $stmt->close();
 
 if (!$concern) {
-    // If concern not found, redirect
     header("Location: adminconcerns.php");
     exit();
 }
 
-// Clear message after fetching/displaying
-$updateMessage = $_SESSION['update_message'] ?? null;
-unset($_SESSION['update_message']);
+// --- HANDLE UPDATE SUBMIT ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $newStatus = $_POST['status'] ?? '';
+    $newAssignee = $_POST['assigned_to'] ?? '';
+    $newRoom = $_POST['room'] ?? '';
+    $newPriority = $_POST['priority'] ?? '';
+    $newProblemType = $_POST['problem_type'] ?? '';
+    $newEquipmentType = $_POST['equipment_type'] ?? '';
 
-function getStatusClass($status) {
-    switch (strtolower($status)) {
-        case 'pending': return 'status-pending';
-        case 'in progress': return 'status-inprogress';
-        case 'completed': return 'status-completed';
-        case 'cancelled': return 'status-cancelled';
-        default: return 'status-default';
+    // Update Concerns table
+    $updateQuery = "UPDATE Concerns 
+                    SET Status = ?, Assigned_to = ?, Room = ?, Problem_Type = ?, Priority = ?
+                    WHERE ConcernID = ?";
+    $stmt1 = $conn->prepare($updateQuery);
+    $stmt1->bind_param("sssssi", $newStatus, $newAssignee, $newRoom, $newProblemType, $newPriority, $concernID);
+    $stmt1->execute();
+    $stmt1->close();
+
+    // Update or insert into equipmentfacilities
+    $checkEF = $conn->prepare("SELECT EFID FROM equipmentfacilities WHERE ConcernID = ?");
+    $checkEF->bind_param("i", $concernID);
+    $checkEF->execute();
+    $checkEF->store_result();
+
+    if ($checkEF->num_rows > 0) {
+        $updateEF = $conn->prepare("UPDATE equipmentfacilities SET Type = ?, Room = ? WHERE ConcernID = ?");
+        $updateEF->bind_param("ssi", $newEquipmentType, $newRoom, $concernID);
+        $updateEF->execute();
+        $updateEF->close();
+    } else {
+        $insertEF = $conn->prepare("INSERT INTO equipmentfacilities (Type, Room, ConcernID) VALUES (?, ?, ?)");
+        $insertEF->bind_param("ssi", $newEquipmentType, $newRoom, $concernID);
+        $insertEF->execute();
+        $insertEF->close();
     }
+    $checkEF->close();
+ 
+    echo "
+    <script>
+        alert('Concern #{$concernID} updated successfully!');
+        window.location.href = 'adminconcerns.php';
+    </script>
+    ";
+    exit();
 }
 
 $concernDate = date("l d M, Y", strtotime($concern['Concern_Date']));
@@ -108,6 +121,8 @@ $concernDate = date("l d M, Y", strtotime($concern['Concern_Date']));
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>View Concern #<?php echo $concernID; ?></title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
 <style>
 body {
     background: white;
@@ -366,6 +381,7 @@ body {
 </head>
 <body>
 
+<!-- NAVBAR -->
 <div class="navbar">
     <div class="logo">
         <img src="img/LSULogo.png" alt="LSU Logo"> 
@@ -375,7 +391,7 @@ body {
         <a href="adminconcerns.php" class="<?php echo ($activePage=="concerns")?"active":""; ?>">Concerns</a>
         <a href="adminreports.php" class="<?php echo ($activePage=="reports")?"active":""; ?>">Reports</a>
         <a href="adminfeedback.php" class="<?php echo ($activePage=="feedback")?"active":""; ?>">Feedback</a>
-        <a href="adminannounce.php" class="<?php echo ($activePage=="announcements")?"active":""; ?>">Announcements</a>
+        <a href="adminannouncement.php" class="<?php echo ($activePage=="announcements")?"active":""; ?>">Announcements</a>
     </div>
     <div class="dropdown">
         <span class="username"><?php echo htmlspecialchars($name); ?></span>
@@ -389,24 +405,15 @@ body {
 </div>
 
 <div class="page-container">
-    
-    <?php if ($updateMessage): ?>
-        <div class="success-alert">
-            <?php echo $updateMessage; ?>
-        </div>
-    <?php endif; ?>
-
     <form method="POST">
         <input type="hidden" name="concern_id" value="<?php echo $concernID; ?>">
-        
+
         <div class="top-info-bar-grid">
-            
             <div class="left-info-group">
                 <div class="info-group">
                     <div class="info-label-green">Reported by:</div>
                     <div class="info-value-white"><?php echo htmlspecialchars($concern['ReportedBy'] ?: 'N/A'); ?></div>
                 </div>
-
                 <div class="info-group">
                     <div class="info-label-green">ID</div>
                     <div class="info-value-white id-value-white"><?php echo htmlspecialchars($concern['ConcernID']); ?></div>
@@ -414,15 +421,13 @@ body {
             </div>
 
             <div class="right-info-group">
-                
                 <div class="info-group">
                     <div class="info-label-green">Assigned:</div>
                     <select class="assignee-select" name="assigned_to">
-                        <option value=""> Assign </option>
+                        <option value="">Assign</option>
                         <?php 
                         $currentAssignee = htmlspecialchars($concern['Assigned_to'] ?: '');
                         foreach ($assigneeOptions as $option): 
-                            // mu check if the current option matches the assigned person
                             $selected = (strcasecmp($currentAssignee, $option) === 0) ? 'selected' : '';
                         ?>
                             <option value="<?php echo htmlspecialchars($option); ?>" <?php echo $selected; ?>>
@@ -454,48 +459,54 @@ body {
         </div>
 
         <div class="details-card-wrapper">
-            
-            <!-- concern title -->
             <div class="detail-field full-width">
                 <label>Concern Title:</label>
                 <div class="content-box"><?php echo htmlspecialchars($concern['Concern_Title'] ?: 'N/A'); ?></div>
             </div>
-            
-            <!-- description -->
+
             <div class="detail-field full-width">
                 <label>Description:</label>
-                <div class="content-box description-box"><?php echo nl2br(htmlspecialchars($concern['Description'] ?: 'N/A')); ?></div>
+                <div class="content-box"><?php echo nl2br(htmlspecialchars($concern['Description'] ?: 'N/A')); ?></div>
             </div>
 
             <div class="detail-row">
                 <div class="detail-field">
                     <label>Room:</label>
-                    <div class="content-box"><?php echo htmlspecialchars($concern['Room'] ?: 'N/A'); ?></div>
+                    <input type="text" class="form-control" name="room" value="<?php echo htmlspecialchars($concern['Room'] ?: ''); ?>" required>
                 </div>
+
                 <div class="detail-field">
                     <label>Equipment/Facility:</label>
-                    <div class="content-box"><?php echo htmlspecialchars($concern['Problem_Type'] ?: 'N/A'); ?></div> 
+                    <input type="text" class="form-control" name="equipment_type" value="<?php echo htmlspecialchars($concern['EquipmentType'] ?: ''); ?>" required>
                 </div>
+
                 <div class="detail-field">
                     <label>Problem Type:</label>
-                    <div class="content-box"><?php echo htmlspecialchars($concern['Problem_Type'] ?: 'N/A'); ?></div>
+                    <input type="text" class="form-control" name="problem_type" value="<?php echo htmlspecialchars($concern['Problem_Type'] ?: ''); ?>" required>
                 </div>
+
                 <div class="detail-field">
                     <label>Priority:</label>
-                    <div class="content-box"><?php echo htmlspecialchars($concern['Priority'] ?: 'N/A'); ?></div>
+                    <select class="form-control" name="priority" required>
+                        <?php 
+                        $priorities = ['Low', 'Medium', 'High', 'Urgent'];
+                        $currentPriority = htmlspecialchars($concern['Priority'] ?: '');
+                        foreach ($priorities as $p): 
+                            $selected = (strcasecmp($p, $currentPriority) === 0) ? 'selected' : '';
+                            echo "<option value='$p' $selected>$p</option>";
+                        endforeach;
+                        ?>
+                    </select>
                 </div>
             </div>
 
-            <!-- for attachment -->
             <div class="detail-field full-width">
                 <label>Attachment (Photo/Video):</label>
                 <div class="file-attachment-box">
                     <div class="file-label-inner">File:</div>
                     <div class="file-link-container">
                         <?php if (!empty($concern['Attachment'])): ?>
-                            <a href="<?php echo htmlspecialchars($concern['Attachment']); ?>" target="_blank" class="attachment-link">
-                                Click to View Attachment
-                            </a>
+                            <a href="<?php echo htmlspecialchars($concern['Attachment']); ?>" target="_blank">Click to View Attachment</a>
                         <?php else: ?>
                             <span class="text-muted">No file attached</span>
                         <?php endif; ?>
@@ -504,14 +515,11 @@ body {
             </div>
 
             <div class="action-buttons">
-                <a href="adminconcerns.php" class="btn btn-return">Return</a>
-                <button type="submit" class="btn btn-update">Update</button>
+                <a href="adminconcerns.php" class="btn btn-secondary">Return</a>
+                <button type="submit" class="btn btn-success">Update</button>
             </div>
         </div>
-
     </form>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -3,7 +3,7 @@ session_start();
 include("config.php");
 
 if (!isset($_SESSION['username'])) {
-    header("Location: index.php");
+    header("Location: login.php");
     exit();
 }
 
@@ -28,12 +28,14 @@ $query = "
 ";
 $result = mysqli_query($conn, $query);
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Concerns</title>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <style>
@@ -44,22 +46,22 @@ $result = mysqli_query($conn, $query);
         }
 
         .navbar {
-            display: flex; 
+            display: flex;
             align-items: center;
             background: linear-gradient(135deg, #163a37, #1c4440, #275850, #1f9158);
-            padding: 15px 30px; 
+            padding: 15px 30px;
             color: white;
         }
 
         .logo {
             display: flex;
             align-items: center;
-            margin-right: 25px; 
+            margin-right: 25px;
         }
 
         .logo img {
-            height: 40px; 
-            width: auto; 
+            height: 40px;
+            width: auto;
         }
 
         .navbar .links {
@@ -77,12 +79,12 @@ $result = mysqli_query($conn, $query);
             transition: 0.3s;
         }
 
-        .navbar .links a.active { 
-            background: #4ba06f; 
+        .navbar .links a.active {
+            background: #4ba06f;
         }
 
-        .navbar .links a:hover { 
-            background: #107040; 
+        .navbar .links a:hover {
+            background: #107040;
         }
 
         .dropdown {
@@ -152,33 +154,68 @@ $result = mysqli_query($conn, $query);
             font-weight: bold;
         }
 
-        .table-container {
-            margin: 0 40px 40px 40px;
+        .table td,
+        .table th {
+            padding: 5px 8px;
         }
 
-        .concern-row {
-            cursor: pointer; 
-            transition: background-color 0.2s ease;
+        .table th:nth-last-child(1),
+        .table td:nth-last-child(1) {
+            width: 250px;
+            text-align: center;
+        }
+
+        .table-container {
+            margin: 0 40px 40px 40px;
         }
 
         .concern-row:hover {
             background-color: #e9ecef;
         }
+
+        .assign-btn {
+            font-size: 13px;
+            padding: 6px 16px;
+            border-radius: 6px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            width: 150px;
+            transition: 0.3s;
+            text-align: center;
+        }
+
+        .assign-btn.unassigned {
+            background-color: #198754;
+            color: white;
+        }
+
+        .assign-btn.assigned {
+            background-color: #ffc107;
+            color: #212529;
+        }
+
+        .assign-btn:hover {
+            opacity: 0.9;
+        }
     </style>
 </head>
+
 <body>
 
     <div class="navbar">
         <div class="logo">
             <img src="img/LSULogo.png" alt="LSU Logo">
         </div>
+
         <div class="links">
-            <a href="admindb.php" class="<?php echo ($activePage=="dashboard")?"active":""; ?>">Dashboard</a>
-            <a href="adminconcerns.php" class="<?php echo ($activePage=="concerns")?"active":""; ?>">Concerns</a>
-            <a href="adminreports.php" class="<?php echo ($activePage=="reports")?"active":""; ?>">Reports</a>
-            <a href="adminfeedback.php" class="<?php echo ($activePage=="feedback")?"active":""; ?>">Feedback</a>
-            <a href="adminannouncement.php" class="<?php echo ($activePage=="announcements")?"active":""; ?>">Announcements</a>
+            <a href="admindb.php" class="<?php echo ($activePage == 'dashboard') ? 'active' : ''; ?>">Dashboard</a>
+            <a href="adminconcerns.php" class="<?php echo ($activePage == 'concerns') ? 'active' : ''; ?>">Concerns</a>
+            <a href="adminreports.php" class="<?php echo ($activePage == 'reports') ? 'active' : ''; ?>">Reports</a>
+            <a href="adminfeedback.php" class="<?php echo ($activePage == 'feedback') ? 'active' : ''; ?>">Feedback</a>
+            <a href="adminannouncement.php" class="<?php echo ($activePage == 'announcements') ? 'active' : ''; ?>">Announcements</a>
         </div>
+
         <div class="dropdown">
             <span class="username"><?php echo htmlspecialchars($name); ?></span>
             <span class="dropdown-toggle">
@@ -195,10 +232,10 @@ $result = mysqli_query($conn, $query);
         <div class="realtime-clock" id="currentDateTime"></div>
     </div>
 
-    <div class="table-container">
-        <div class="table-responsive mt-3">
-            <table class="table table-bordered table-hover align-middle">
-                <thead>
+    <div class="table-container mx-4">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle mb-0 text-center">
+                <thead class="table-success">
                     <tr>
                         <th>ID</th>
                         <th>Title</th>
@@ -212,30 +249,57 @@ $result = mysqli_query($conn, $query);
                     </tr>
                 </thead>
                 <tbody>
-                    <?php while ($row = mysqli_fetch_assoc($result)): ?>
+                    <?php 
+                    mysqli_data_seek($result, 0);
+                    while ($row = mysqli_fetch_assoc($result)): 
+                        $statusClass = '';
+                        switch ($row['Status']) {
+                            case 'Completed':
+                                $statusClass = 'bg-success text-white';
+                                break;
+                            case 'In Progress':
+                                $statusClass = 'bg-warning text-dark';
+                                break;
+                            case 'Pending':
+                                $statusClass = 'bg-danger text-white';
+                                break;
+                            case 'Cancelled':
+                                $statusClass = 'bg-secondary text-white';
+                                break;
+                            default:
+                                $statusClass = 'bg-info text-white';
+                        }
 
-                        <?php 
-                            $statusClass = '';
-                            switch ($row['Status']) {
-                                case 'Completed': $statusClass = 'bg-success text-white'; break;
-                                case 'In Progress': $statusClass = 'bg-warning text-dark'; break;
-                                case 'Pending': $statusClass = 'bg-danger text-white'; break;
-                                case 'Cancelled': $statusClass = 'bg-secondary text-white'; break;
-                                default: $statusClass = 'bg-info text-white';
-                            }
-                        ?>
-
-                        <tr class="concern-row" data-id="<?php echo $row['ConcernID']; ?>">
-                            <td><?php echo $row['ConcernID']; ?></td>
-                            <td><?php echo htmlspecialchars($row['Concern_Title']); ?></td>
-                            <td><?php echo htmlspecialchars($row['Room']); ?></td>
-                            <td><?php echo htmlspecialchars($row['Problem_Type']); ?></td>
-                            <td><?php echo htmlspecialchars($row['Priority']); ?></td>
-                            <td><?php echo htmlspecialchars($row['Concern_Date']); ?></td>
-                            <td><span class="badge <?php echo $statusClass; ?>"><?php echo htmlspecialchars($row['Status']); ?></span></td>
-                            <td><?php echo htmlspecialchars($row['ReportedBy']); ?></td>
-                            <td><?php echo htmlspecialchars($row['Assigned_to']); ?></td>
-                        </tr>
+                        $assignedName = trim($row['Assigned_to']);
+                        if (empty($assignedName)) {
+                            $buttonText = "Assign";
+                            $buttonClass = "assign-btn unassigned";
+                        } else {
+                            $buttonText = htmlspecialchars($assignedName);
+                            $buttonClass = "assign-btn assigned";
+                        }
+                    ?>
+                    <tr>
+                        <td><?php echo $row['ConcernID']; ?></td>
+                        <td><?php echo htmlspecialchars($row['Concern_Title']); ?></td>
+                        <td><?php echo htmlspecialchars($row['Room']); ?></td>
+                        <td><?php echo htmlspecialchars($row['Problem_Type']); ?></td>
+                        <td><?php echo htmlspecialchars($row['Priority']); ?></td>
+                        <td><?php echo htmlspecialchars($row['Concern_Date']); ?></td>
+                        <td>
+                            <span class="badge <?php echo $statusClass; ?>">
+                                <?php echo htmlspecialchars($row['Status']); ?>
+                            </span>
+                        </td>
+                        <td><?php echo htmlspecialchars($row['ReportedBy']); ?></td>
+                        <td>
+                            <button 
+                                class="<?php echo $buttonClass; ?>" 
+                                onclick="window.location.href='view_concern.php?id=<?php echo $row['ConcernID']; ?>'">
+                                <?php echo $buttonText; ?>
+                            </button>
+                        </td>
+                    </tr>
                     <?php endwhile; ?>
                 </tbody>
             </table>
@@ -243,34 +307,23 @@ $result = mysqli_query($conn, $query);
     </div>
 
     <script>
-        function updateDateTime(){
+        function updateDateTime() {
             const now = new Date();
             const options = { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'short', 
-                day: 'numeric', 
-                hour: '2-digit', 
-                minute: '2-digit', 
-                second: '2-digit', 
+                weekday: 'long',
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
                 hour12: true 
             };
             document.getElementById('currentDateTime').textContent = now.toLocaleString('en-US', options);
         }
+
         setInterval(updateDateTime, 1000);
         updateDateTime();
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const rows = document.querySelectorAll('.concern-row');
-            rows.forEach(row => {
-                row.addEventListener('click', () => {
-                    const concernId = row.getAttribute('data-id');
-                    if (concernId) {
-                        window.location.href = `view_concern.php?id=${concernId}`;
-                    }
-                });
-            });
-        });
     </script>
 
 </body>

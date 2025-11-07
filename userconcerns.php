@@ -7,19 +7,27 @@ if(!isset($_SESSION['username'])){
     exit();
 }
 
-$username = $_SESSION['username']; 
+$username = $_SESSION['username'];
 $name = isset($_SESSION['name']) ? $_SESSION['name'] : $username;
-$activePage = "concerns"; 
+$activePage = "concerns";
 
 // Get AccountID of the logged-in user
-$userQuery = "SELECT AccountID FROM Accounts WHERE Username = '$username'";
-$userResult = mysqli_query($conn, $userQuery);
-$userRow = mysqli_fetch_assoc($userResult);
+$userQuery = "SELECT AccountID FROM Accounts WHERE Username = ?";
+$stmtUser = $conn->prepare($userQuery);
+$stmtUser->bind_param("s", $username);
+$stmtUser->execute();
+$userResult = $stmtUser->get_result();
+$userRow = $userResult->fetch_assoc();
 $accountID = $userRow ? $userRow['AccountID'] : 0;
+$stmtUser->close();
 
-// Get concerns of the logged-in user
-$concernsQuery = "SELECT * FROM Concerns WHERE AccountID = '$accountID' AND Status != 'Completed' ORDER BY Concern_Date DESC";
-$concernsResult = mysqli_query($conn, $concernsQuery);
+// Get concerns of the logged-in user (exclude Completed and Cancelled)
+$concernsQuery = "SELECT * FROM Concerns WHERE AccountID = ? AND Status NOT IN ('Completed', 'Cancelled') ORDER BY Concern_Date DESC";
+$stmt = $conn->prepare($concernsQuery);
+$stmt->bind_param("i", $accountID);
+$stmt->execute();
+$concernsResult = $stmt->get_result();
+$stmt->close();
 ?>
 
 <!DOCTYPE html>
@@ -204,28 +212,16 @@ body {
     padding: 20px;
 }
 
+/* badge positioning smaller screens */
 .status-badge {
     padding: 5px 12px;
     border-radius: 20px;
     font-weight: bold;
     font-size: 12px;
-    margin-left: 475px;
+    margin-right: 10px; /* adds spacing between badge and date */
+    margin-left: 0;     /* ensures it's not pushed right */
 }
 
-.status-pending {
-    background: #fff3cd;
-    color: #856404;
-}
-
-.status-inprogress {
-    background: #cce7ff;
-    color: #004085;
-}
-
-.status-completed {
-    background: #d1edff;
-    color: #0c5460;
-}
 
 .form-field {
     margin-bottom: 15px;
@@ -290,17 +286,34 @@ body {
 
         <div class="accordion" id="concernsAccordion">
             <?php
-            if (mysqli_num_rows($concernsResult) > 0) {
+            if ($concernsResult && $concernsResult->num_rows > 0) {
                 $index = 1;
-                while ($row = mysqli_fetch_assoc($concernsResult)) {
+                while ($row = $concernsResult->fetch_assoc()) {
                     $status = isset($row['Status']) ? $row['Status'] : 'Unknown';
-                    $statusClass = strtolower(str_replace(' ', '', $status));
+                    // map status -> bootstrap classes you wanted
+                    switch ($status) {
+                        case 'In Progress':
+                            $statusClass = 'bg-warning text-dark';
+                            break;
+                        case 'Pending':
+                            $statusClass = 'bg-danger text-white';
+                            break;
+                        default:
+                            $statusClass = 'bg-light text-dark';
+                    }
+
                     $date = date("l, d M Y", strtotime($row['Concern_Date']));
+                    $concernID = $row['ConcernID'];
+
                     echo "
                     <div class='accordion-item'>
                         <h2 class='accordion-header'>
                             <button class='accordion-button collapsed' type='button' data-bs-toggle='collapse' data-bs-target='#concern{$index}' aria-expanded='false'>
-                                {$date} <span class='status-badge status-{$statusClass}'>" . htmlspecialchars($status) . "</span>
+                                <span class='d-flex justify-content-between w-100'>
+    <span>{$date}</span>
+    <span class='badge {$statusClass} status-badge'>" . htmlspecialchars($status) . "</span>
+</span>
+
                             </button>
                         </h2>
                         <div id='concern{$index}' class='accordion-collapse collapse' data-bs-parent='#concernsAccordion'>
