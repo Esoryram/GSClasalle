@@ -24,6 +24,23 @@ $userRow = $stmtUser->get_result()->fetch_assoc();
 $accountID = $userRow['AccountID'] ?? 0;
 $stmtUser->close();
 
+// Check if a specific concern should be opened from dashboard
+$openConcernId = isset($_GET['open_concern']) ? intval($_GET['open_concern']) : null;
+
+// Verify the concern belongs to the current user
+if ($openConcernId) {
+    $stmt = $conn->prepare("SELECT ConcernID FROM Concerns WHERE ConcernID = ? AND AccountID = ?");
+    $stmt->bind_param("ii", $openConcernId, $accountID);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows === 0) {
+        // Concern doesn't belong to user or doesn't exist
+        $openConcernId = null;
+    }
+    $stmt->close();
+}
+
 // Fetch concerns for the logged-in user (excluding Completed and Cancelled)
 $stmt = $conn->prepare(
     "SELECT c.*, ef.Type as EquipmentType 
@@ -323,6 +340,22 @@ $stmt->close();
             width: 100%;
             box-sizing: border-box;
             min-height: 44px; /* FIXED: Better touch target */
+        }
+
+        /* Enhanced highlight styles for auto-opened concerns */
+        .accordion-item.highlighted {
+            background-color: #e8f5e8 !important;
+            border-left: 4px solid #1f9158 !important;
+            transition: all 0.3s ease;
+        }
+
+        .accordion-item.highlighted .accordion-button {
+            background: linear-gradient(90deg, #1f9158, #163a37) !important;
+        }
+
+        /* Smooth transitions for accordion */
+        .accordion-collapse {
+            transition: all 0.3s ease;
         }
 
         /* Anchor highlight styles */
@@ -692,39 +725,94 @@ $stmt->close();
             }
         });
 
-        // Handle anchor navigation and auto-expand
-        if (window.location.hash) {
-            const targetId = window.location.hash.substring(1);
-            const targetElement = document.getElementById(targetId);
+        // Handle both anchor navigation and open_concern parameter
+        function autoOpenConcern() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const openConcernId = urlParams.get('open_concern');
             
-            if (targetElement) {
-                // Scroll to the element
-                setTimeout(() => {
-                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }, 300);
+            if (openConcernId) {
+                const targetElement = document.getElementById('concern-' + openConcernId);
                 
-                // Auto-expand the accordion
-                const accordionButton = targetElement.querySelector('.accordion-button');
-                const accordionCollapse = targetElement.querySelector('.accordion-collapse');
-                
-                if (accordionButton && accordionCollapse) {
-                    // Close all other accordions first
-                    const allAccordions = document.querySelectorAll('.accordion-collapse');
-                    allAccordions.forEach(acc => {
-                        if (acc !== accordionCollapse) {
-                            acc.classList.remove('show');
-                        }
-                    });
-                    
-                    // Open the target accordion
+                if (targetElement) {
+                    // Scroll to the element
                     setTimeout(() => {
-                        accordionCollapse.classList.add('show');
-                        accordionButton.classList.remove('collapsed');
-                        accordionButton.setAttribute('aria-expanded', 'true');
-                    }, 400);
+                        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        
+                        // Add highlight effect
+                        targetElement.classList.add('highlighted');
+                        
+                        // Remove highlight after 3 seconds
+                        setTimeout(() => {
+                            targetElement.classList.remove('highlighted');
+                        }, 3000);
+                    }, 300);
+                    
+                    // Auto-expand the accordion
+                    const accordionButton = targetElement.querySelector('.accordion-button');
+                    const accordionCollapse = targetElement.querySelector('.accordion-collapse');
+                    
+                    if (accordionButton && accordionCollapse) {
+                        // Close all other accordions first
+                        const allAccordions = document.querySelectorAll('.accordion-collapse');
+                        allAccordions.forEach(acc => {
+                            if (acc !== accordionCollapse) {
+                                acc.classList.remove('show');
+                                const btn = acc.previousElementSibling?.querySelector('.accordion-button');
+                                if (btn) {
+                                    btn.classList.add('collapsed');
+                                    btn.setAttribute('aria-expanded', 'false');
+                                }
+                            }
+                        });
+                        
+                        // Open the target accordion
+                        setTimeout(() => {
+                            accordionCollapse.classList.add('show');
+                            accordionButton.classList.remove('collapsed');
+                            accordionButton.setAttribute('aria-expanded', 'true');
+                        }, 500);
+                    }
+                    
+                    // Clean URL without removing history (remove open_concern parameter)
+                    const cleanUrl = window.location.pathname + window.location.search.replace(/[?&]open_concern=[^&]*/, '').replace(/^&/, '?').replace(/[?&]$/, '');
+                    const newUrl = cleanUrl === window.location.pathname ? cleanUrl : cleanUrl;
+                    window.history.replaceState({}, document.title, newUrl);
+                }
+            }
+            
+            // Also handle regular anchor navigation
+            if (window.location.hash) {
+                const targetId = window.location.hash.substring(1);
+                const targetElement = document.getElementById(targetId);
+                
+                if (targetElement) {
+                    setTimeout(() => {
+                        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 300);
+                    
+                    const accordionButton = targetElement.querySelector('.accordion-button');
+                    const accordionCollapse = targetElement.querySelector('.accordion-collapse');
+                    
+                    if (accordionButton && accordionCollapse) {
+                        const allAccordions = document.querySelectorAll('.accordion-collapse');
+                        allAccordions.forEach(acc => {
+                            if (acc !== accordionCollapse) {
+                                acc.classList.remove('show');
+                            }
+                        });
+                        
+                        setTimeout(() => {
+                            accordionCollapse.classList.add('show');
+                            accordionButton.classList.remove('collapsed');
+                            accordionButton.setAttribute('aria-expanded', 'true');
+                        }, 400);
+                    }
                 }
             }
         }
+
+        // Run auto-open function
+        autoOpenConcern();
 
         // Password change handler
         const savePasswordBtn = document.getElementById('savePasswordBtn');

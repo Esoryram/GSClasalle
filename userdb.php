@@ -82,624 +82,532 @@ if ($accountID) {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<!-- FIXED: Better viewport for iOS devices -->
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, shrink-to-fit=no">
-<title>My Dashboard | Concern Tracker</title>
+    <meta charset="UTF-8">
+    <!-- FIXED: Better viewport for iOS devices -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, shrink-to-fit=no">
+    <title>My Dashboard | Concern Tracker</title>
 
-<!-- Bootstrap CSS -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<!-- SweetAlert2 CSS for popups -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-<!-- FontAwesome icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-<!-- Google Fonts Poppins -->
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- SweetAlert2 CSS for popups -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <!-- Google Fonts Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 
-<style>
-/* FIXED: Better base styles for mobile */
-* {
-    -webkit-tap-highlight-color: transparent;
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    box-sizing: border-box;
-}
+    <style>
+        /* FIXED: Better base styles for mobile */
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        input, textarea, .form-control {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
 
-input, textarea, .form-control {
-    -webkit-user-select: text;
-    -moz-user-select: text;
-    -ms-user-select: text;
-    user-select: text;
-}
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            background: #f9fafb;
+            /* FIXED: Prevent horizontal scroll on mobile */
+            overflow-x: hidden;
+        }
 
-/* General styling */
-body {
-    margin: 0;
-    font-family: 'Poppins', sans-serif;
-    font-weight: 600;
-    background: #f9fafb;
-    /* FIXED: Prevent horizontal scroll */
-    overflow-x: hidden;
-}
+        /* Navbar Styles - FIXED for mobile */
+        .navbar {
+            display: flex;
+            align-items: center;
+            background: linear-gradient(135deg, #087830, #3c4142);
+            padding: 12px 15px;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            position: relative;
+            /* FIXED: Ensure navbar doesn't cause overflow */
+            width: 100%;
+            box-sizing: border-box;
+        }
 
-/* Navbar styling - FIXED for mobile */
-.navbar {
-    display: flex;
-    align-items: center;
-    background: linear-gradient(135deg, #087830, #3c4142);
-    padding: 12px 15px;
-    color: white;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-    position: relative;
-    width: 100%;
-    box-sizing: border-box;
-}
+        .logo img {
+            height: 35px;
+            width: auto;
+            object-fit: contain;
+            margin-right: 10px;
+        }
 
-/* Logo */
-.logo {
-    display: flex;
-    align-items: center;
-    margin-right: 15px; 
-}
+        .navbar .links {
+            display: flex;
+            gap: 10px;
+            margin-right: auto;
+        }
 
-.logo img {
-    height: 35px; 
-    width: auto; 
-    object-fit: contain;
-}
+        .navbar .links a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 14px;
+            padding: 6px 10px;
+            border-radius: 5px;
+            transition: 0.3s;
+        }
 
-/* Navbar links */
-.navbar .links {
-    display: flex;
-    gap: 12px;
-    margin-right: auto;
-}
+        .navbar .links a.active {
+            background: #4ba06f;
+            border: 1px solid #07491f;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+        }
 
-.navbar .links a {
-    color: white; 
-    text-decoration: none;
-    font-weight: bold; 
-    font-size: 14px;
-    padding: 8px 12px; 
-    border-radius: 5px;
-    transition: all 0.3s ease;
-    /* FIXED: Better touch target */
-    min-height: 44px;
-    display: flex;
-    align-items: center;
-}
+        .navbar .links a:hover {
+            background: #107040;
+        }
 
-.navbar .links a.active {
-    background: #4ba06f;
-    border: 1px solid #07491f;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.4);
-    color: white;
-}
+        /* FIXED: Better mobile menu toggle */
+        .navbar-toggler {
+            display: none;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 16px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
 
-.navbar .links a:hover {
-    background: #107040;
-    color: white;
-}
+        /* FIXED: Dropdown Menu for touch */
+        .dropdown {
+            position: relative;
+        }
 
-.navbar .links a i {
-    margin-right: 5px;
-}
+        .dropdown-toggle {
+            cursor: pointer;
+            font-size: 14px;
+            padding: 8px 12px;
+            border-radius: 5px;
+            color: white;
+            background: transparent;
+            border: none;
+            /* FIXED: Better touch target */
+            min-height: 44px;
+        }
 
-/* Mobile menu toggle - FIXED */
-.navbar-toggler {
-    display: none;
-    background: transparent;
-    border: 1px solid rgba(255,255,255,0.3);
-    color: white;
-    padding: 8px 12px;
-    border-radius: 4px;
-    font-size: 16px;
-    margin-left: 10px;
-    cursor: pointer;
-}
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            min-width: 180px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            overflow: hidden;
+            z-index: 1000;
+        }
 
-/* Dropdown menu for username - FIXED for touch */
-.dropdown {
-    position: relative;
-}
+        .dropdown:hover .dropdown-menu,
+        .dropdown:focus-within .dropdown-menu {
+            display: block;
+        }
 
-.dropdown-toggle {
-    cursor: pointer;
-    font-size: 14px;
-    padding: 8px 12px;
-    border-radius: 5px;
-    color: white;
-    background: transparent;
-    border: none;
-    /* FIXED: Better touch target */
-    min-height: 44px;
-}
+        .dropdown-menu a {
+            display: block;
+            padding: 12px 16px;
+            color: #333;
+            text-decoration: none;
+            font-size: 14px;
+            /* FIXED: Better touch targets */
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+        }
 
-.dropdown-menu {
-    display: none;
-    position: absolute;
-    top: 100%; 
-    right: 0;
-    background: white;
-    min-width: 180px;
-    border-radius: 5px; 
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    z-index: 1000;
-    overflow: hidden;
-}
+        .dropdown-menu a:hover {
+            background: #f1f1f1;
+        }
 
-.dropdown:hover .dropdown-menu,
-.dropdown:focus-within .dropdown-menu {
-    display: block;
-}
+        /* Container for dashboard content */
+        .container {
+            padding: 20px 15px;
+        }
 
-.dropdown-menu a {
-    display: block;
-    padding: 12px 16px; 
-    color: #333;
-    text-decoration: none;
-    font-size: 14px; 
-    /* FIXED: Better touch targets */
-    min-height: 44px;
-    display: flex;
-    align-items: center;
-}
+        /* Top dashboard layout: cards + announcements */
+        .top-dashboard-grid {
+            display: grid;
+            grid-template-columns: 3fr 1fr;
+            gap: 20px; 
+            margin-bottom: 25px;
+        }
 
-.dropdown-menu a:hover {
-    background: #f1f1f1;
-}
+        /* Status cards wrapper */
+        .status-cards-wrapper {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 15px; /* Gap between cards */
+        }
 
-/* Container for dashboard content */
-.container {
-    padding: 15px;
-    width: 100%;
-    box-sizing: border-box;
-}
+        /* Individual dashboard card */
+        .dashboard-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px; 
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); 
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-align: left;
+            min-height: 110px;
+            border: 1px solid #e5e7eb; 
+        }
+        .dashboard-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+        }
+        .card-icon { 
+            font-size: 22px; 
+            opacity: 0.7; 
+            margin-bottom: 8px; 
+        }
 
-/* Top dashboard layout: cards + announcements */
-.top-dashboard-grid {
-    display: grid;
-    grid-template-columns: 3fr 1fr;
-    gap: 15px; 
-    margin-bottom: 20px;
-}
+        .card-value { 
+            font-size: 36px; 
+            font-weight: 700; 
+            margin: 0; 
+            line-height: 1; 
+        }
 
-/* Status cards wrapper */
-.status-cards-wrapper {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr); 
-    gap: 12px;
-}
+        .card-label { 
+            font-size: 14px; 
+            font-weight: 500; 
+            color: #6b7280; 
+            margin-top: 5px; 
+            text-transform: capitalize; 
+        }
 
-/* Individual dashboard card */
-.dashboard-card {
-    background: white;
-    border-radius: 12px;
-    padding: 15px; 
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); 
-    transition: transform 0.2s, box-shadow 0.2s;
-    text-align: left;
-    min-height: 100px;
-    border: 1px solid #e5e7eb; 
-    /* FIXED: Better mobile sizing */
-    width: 100%;
-}
-.dashboard-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
-}
-.card-icon { 
-    font-size: 20px; 
-    opacity: 0.7; 
-    margin-bottom: 8px; 
-}
+        /* Cards color based on status */
+        .card-total { 
+            color: #275850; 
+        }
 
-.card-value { 
-    font-size: 32px; 
-    font-weight: 700; 
-    margin: 0; 
-    line-height: 1; 
-}
+        .card-total .card-icon { 
+            color: #1f9158; 
+        }
 
-.card-label { 
-    font-size: 13px; 
-    font-weight: 500; 
-    color: #6b7280; 
-    margin-top: 5px; 
-    text-transform: capitalize; 
-}
+        .card-pending { 
+            background-color: #fffbeb; 
+            color: #b45309; 
+        }
 
-/* Cards color based on status */
-.card-total { 
-    color: #275850; 
-}
+        .card-pending .card-icon { 
+            color: #f59e0b; 
+        }
 
-.card-total .card-icon { 
-    color: #1f9158; 
-}
+        .card-inprogress { 
+            background-color: #e0f2fe; 
+            color: #075985; 
+        }
 
-.card-pending { 
-    background-color: #fffbeb; 
-    color: #b45309; 
-}
+        .card-inprogress .card-icon { 
+            color: #38bdf8; 
+        }
 
-.card-pending .card-icon { 
-    color: #f59e0b; 
-}
+        .card-completed { 
+            background-color: #ecfdf5; 
+            color: #087830; 
+        }
 
-.card-inprogress { 
-    background-color: #e0f2fe; 
-    color: #075985; 
-}
+        .card-completed .card-icon { 
+            color: #087830; 
+        }
 
-.card-inprogress .card-icon { 
-    color: #38bdf8; 
-}
+        /* Call-to-action section */
+        .cta-section {
+            text-align: center;
+            margin: 20px 0;
+        }
 
-.card-completed { 
-    background-color: #ecfdf5; 
-    color: #087830; 
-}
+        #submitConcernBtn {
+            padding: 12px 25px; 
+            font-size: 16px; 
+            font-weight: 700;
+            border-radius: 10px;
+            background: #1f9158; 
+            color: white;
+            border: none;
+            text-decoration: none; 
+            display: inline-block; 
+            transition: background 0.3s, transform 0.1s;
+            box-shadow: 0 4px 10px rgba(31, 145, 88, 0.4);
+            width: 300px;
+            align: center;
+        }
 
-.card-completed .card-icon { 
-    color: #087830; 
-}
+        #submitConcernBtn:hover {
+            background: #107040;
+            transform: translateY(-2px);
+            color: white;
+        }
 
-/* Call-to-action section */
-.cta-section {
-    text-align: center;
-    margin: 20px 0;
-}
+        /* Recent concerns panel */
+        .recent-concerns-panel {
+            background: white;
+            border-radius: 12px; 
+            padding: 20px; 
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); 
+            margin-top: 20px; /* Space above the panel */
+            overflow-x: auto;
+        }
 
-#submitConcernBtn {
-    padding: 14px 25px; 
-    font-size: 16px; 
-    font-weight: 700;
-    border-radius: 10px;
-    background: #1f9158; 
-    color: white;
-    border: none;
-    text-decoration: none; 
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.3s, transform 0.1s;
-    box-shadow: 0 4px 10px rgba(31, 145, 88, 0.4);
-    /* FIXED: Better touch target */
-    min-height: 50px;
-}
+        /* Table styling */
+        .table {
+            min-width: 600px; /* Ensure table is scrollable on mobile */
+        }
 
-#submitConcernBtn:hover {
-    background: #107040;
-    transform: translateY(-2px);
-}
+        .table th, .table td { 
+            vertical-align: middle; 
+            font-size: 14px; 
+            padding: 10px 8px;
+        }
 
-/* Recent concerns panel */
-.recent-concerns-panel {
-    background: white;
-    border-radius: 12px; 
-    padding: 15px; 
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); 
-    margin-top: 20px;
-    overflow-x: auto;
-    width: 100%;
-}
+        /* Status pill styling */
+        .status-pill {
+            padding: 4px 10px;
+            border-radius: 50px;
+            font-size: 12px;
+            min-width: 80px;
+            display: inline-block;
+            text-align: center;
+        }
 
-/* Table styling */
-.table {
-    min-width: 600px;
-}
+        .status-pending { 
+            background: #fef3c7; 
+            color: #b45309; 
+        }
 
-.table th, .table td { 
-    vertical-align: middle; 
-    font-size: 14px; 
-    padding: 10px 8px;
-}
+        .status-in-progress { 
+            background: #bfdbfe; 
+            color: #1e40af; 
+        }
 
-/* Status pill styling */
-.status-pill {
-    padding: 5px 10px;
-    border-radius: 50px;
-    font-size: 11px;
-    min-width: 80px;
-    display: inline-block;
-    text-align: center;
-}
+        .status-completed { 
+            background: #d1fae5; 
+            color: #065f46; 
+        }
 
-.status-pending { 
-    background: #fef3c7; 
-    color: #b45309; 
-}
+        /* Announcements panel */
+        .announcements-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
 
-.status-in-progress { 
-    background: #bfdbfe; 
-    color: #1e40af; 
-}
+        .announcements-panel h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f9158;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e5e7eb;
+        }
 
-.status-completed { 
-    background: #d1fae5; 
-    color: #065f46; 
-}
+        .announcement-item {
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 10px;
+            font-size: 12px;
+            border-left: 3px solid #1f9158;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
 
-/* Announcements panel */
-.announcements-panel {
-    background: white;
-    border-radius: 12px;
-    padding: 12px;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
+        .announcement-item:hover {
+            background: #f0f4f8;
+        }
 
-.announcements-panel h3 {
-    font-size: 15px;
-    font-weight: 600;
-    color: #1f9158;
-    margin-bottom: 10px;
-    padding-bottom: 8px;
-    border-bottom: 2px solid #e5e7eb;
-}
+        /* Scrollbar styling for announcements */
+        #announcementsContainer {
+            max-height: 130px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
 
-.announcement-item {
-    background: #f9fafb;
-    border-radius: 8px;
-    padding: 10px 12px;
-    margin-bottom: 8px;
-    font-size: 12px;
-    border-left: 3px solid #1f9158;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    cursor: pointer;
-    transition: background 0.2s;
-    /* FIXED: Better touch target */
-    min-height: 44px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
+        #announcementsContainer::-webkit-scrollbar {
+            width: 6px; 
+        }
 
-.announcement-item:hover {
-    background: #f0f4f8;
-}
+        #announcementsContainer::-webkit-scrollbar-thumb { 
+            background-color: #1f9158; 
+            border-radius: 10px; 
+        }
 
-/* Scrollbar styling for announcements */
-#announcementsContainer {
-    max-height: 120px;
-    overflow-y: auto;
-    scroll-behavior: smooth;
-}
+        #announcementsContainer::-webkit-scrollbar-track { 
+            background-color: #f0f0f0; 
+        }
 
-#announcementsContainer::-webkit-scrollbar {
-    width: 4px; 
-}
+        /* FIXED: Mobile Responsive - iPhone 12 Pro is 390px wide */
+        @media (max-width: 480px) {
+            .navbar {
+                padding: 10px 12px;
+                flex-wrap: wrap;
+            }
+            
+            .navbar-toggler {
+                display: block;
+                order: 2;
+            }
+            
+            .navbar .links {
+                display: none;
+                width: 100%;
+                flex-direction: column;
+                gap: 8px;
+                margin-top: 10px;
+                order: 3;
+            }
+            
+            .navbar .links.show {
+                display: flex;
+            }
+            
+            .navbar .links a {
+                padding: 12px 15px;
+                text-align: center;
+                font-size: 15px;
+                min-height: 44px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .logo {
+                order: 1;
+                margin-right: auto;
+            }
+            
+            .dropdown {
+                order: 2;
+                margin-left: auto;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+            
+            .top-dashboard-grid { 
+                grid-template-columns: 1fr; 
+            } 
+            
+            .status-cards-wrapper { 
+                grid-template-columns: repeat(2, 1fr); 
+            } 
+            
+            .dashboard-card {
+                padding: 15px;
+                min-height: 100px;
+            }
+            
+            .card-value {
+                font-size: 32px;
+            }
+            
+            .recent-concerns-panel {
+                padding: 15px;
+            }
+            
+            .table th, .table td {
+                font-size: 12px;
+                padding: 8px 6px;
+            }
+            
+            .btn-sm {
+                padding: 5px 8px;
+                font-size: 12px;
+            }
+            
+            .announcements-panel {
+                padding: 12px;
+            }
+            
+            .announcement-item {
+                padding: 8px 10px;
+                font-size: 12px;
+            }
+        }
 
-#announcementsContainer::-webkit-scrollbar-thumb { 
-    background-color: #1f9158; 
-    border-radius: 10px; 
-}
+        /* FIXED: Specific media query for iPhone 12 Pro (390px) */
+        @media (max-width: 390px) {
+            .navbar .links a {
+                font-size: 14px;
+                padding: 10px 12px;
+            }
+            
+            .dropdown-toggle {
+                font-size: 13px;
+                padding: 6px 10px;
+            }
+            
+            .status-cards-wrapper { 
+                grid-template-columns: 1fr; 
+            } 
+            
+            .card-value {
+                font-size: 28px;
+            }
+        }
 
-#announcementsContainer::-webkit-scrollbar-track { 
-    background-color: #f0f0f0; 
-}
+        /* FIXED: Better tablet styles */
+        @media (min-width: 481px) and (max-width: 768px) {
+            .navbar {
+                padding: 12px 15px;
+            }
+            
+            .navbar .links a {
+                font-size: 14px;
+                padding: 8px 12px;
+            }
+            
+            .top-dashboard-grid { 
+                grid-template-columns: 1fr; 
+            } 
+            
+            .status-cards-wrapper { 
+                grid-template-columns: repeat(2, 1fr); 
+            } 
+        }
 
-/* FIXED: Mobile-specific styles for iPhone 12 Pro (390px) */
-@media (max-width: 480px) {
-    .navbar {
-        flex-wrap: wrap;
-        padding: 10px 12px;
-    }
-    
-    .navbar-toggler {
-        display: block;
-        order: 2;
-    }
-    
-    .navbar .links {
-        display: none;
-        width: 100%;
-        flex-direction: column;
-        gap: 8px;
-        margin-top: 10px;
-        order: 3;
-    }
-    
-    .navbar .links.show {
-        display: flex;
-    }
-    
-    .navbar .links a {
-        padding: 12px 15px;
-        text-align: center;
-        font-size: 15px;
-        justify-content: center;
-    }
-    
-    .logo {
-        order: 1;
-        margin-right: auto;
-    }
-    
-    .dropdown {
-        order: 2;
-        margin-left: auto;
-    }
-    
-    .container {
-        padding: 10px;
-    }
-    
-    .top-dashboard-grid {
-        grid-template-columns: 1fr;
-        gap: 15px;
-    }
-    
-    .status-cards-wrapper {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
-    }
-    
-    .dashboard-card {
-        padding: 12px;
-        min-height: 90px;
-    }
-    
-    .card-value {
-        font-size: 28px;
-    }
-    
-    .card-label {
-        font-size: 12px;
-    }
-    
-    .card-icon {
-        font-size: 18px;
-    }
-    
-    .recent-concerns-panel {
-        padding: 12px;
-    }
-    
-    .table th, .table td {
-        font-size: 11px;
-        padding: 6px 4px;
-    }
-    
-    .btn-sm {
-        padding: 4px 6px;
-        font-size: 11px;
-        min-height: 32px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .announcements-panel {
-        padding: 10px;
-    }
-    
-    .announcement-item {
-        padding: 8px 10px;
-        font-size: 11px;
-    }
-    
-    #submitConcernBtn {
-        padding: 12px 20px;
-        font-size: 15px;
-        min-height: 44px;
-        width: 100%;
-    }
-}
-
-/* FIXED: Specific styles for iPhone 12 Pro (390px) */
-@media (max-width: 390px) {
-    .navbar .links a {
-        font-size: 14px;
-        padding: 10px 12px;
-    }
-    
-    .dropdown-toggle {
-        font-size: 13px;
-        padding: 6px 10px;
-    }
-    
-    .status-cards-wrapper {
-        grid-template-columns: 1fr;
-    }
-    
-    .dashboard-card {
-        padding: 10px;
-        min-height: 85px;
-    }
-    
-    .card-value {
-        font-size: 26px;
-    }
-    
-    .container {
-        padding: 8px;
-    }
-    
-    .table th, .table td {
-        font-size: 10px;
-        padding: 5px 3px;
-    }
-    
-    .status-pill {
-        font-size: 10px;
-        min-width: 70px;
-        padding: 4px 8px;
-    }
-}
-
-/* FIXED: Tablet styles */
-@media (min-width: 481px) and (max-width: 768px) {
-    .navbar {
-        padding: 12px 15px;
-    }
-    
-    .navbar .links a {
-        font-size: 13px;
-        padding: 6px 10px;
-    }
-    
-    .status-cards-wrapper {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-    }
-    
-    .dashboard-card {
-        padding: 15px;
-    }
-    
-    .container {
-        padding: 12px;
-    }
-    
-    .top-dashboard-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* FIXED: Larger mobile devices */
-@media (min-width: 769px) and (max-width: 992px) {
-    .top-dashboard-grid {
-        grid-template-columns: 2fr 1fr;
-    }
-    
-    .status-cards-wrapper {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-/* FIXED: Button styles for mobile */
-.btn {
-    /* FIXED: Better touch targets for all buttons */
-    min-height: 44px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.btn-sm {
-    min-height: 36px;
-}
-
-/* FIXED: Modal improvements for mobile */
-.modal-dialog {
-    margin: 10px;
-}
-
-.modal-content {
-    border-radius: 12px;
-}
-
-@media (max-width: 576px) {
-    .modal-dialog {
-        margin: 5px;
-    }
-}
-</style>
+        @media (max-width: 576px) { 
+            .status-cards-wrapper { 
+                grid-template-columns: 1fr; 
+            } 
+            
+            .card-value {
+                font-size: 28px;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+            
+            .announcements-panel {
+                padding: 12px;
+            }
+            
+            .announcement-item {
+                padding: 8px 10px;
+                font-size: 12px;
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -709,25 +617,22 @@ body {
         <img src="img/LSULogo.png" alt="LSU Logo">
     </div>
 
-    <!-- Links -->
     <div class="links" id="navbarLinks">
-        <a href="userdb.php" class="<?php echo ($activePage=='dashboard')?'active':''; ?>">
+        <a href="userdb.php" class="<?= $activePage == 'dashboard' ? 'active' : '' ?>">
             <i class="fas fa-home me-1"></i> Dashboard
         </a>
-        <a href="usersubmit.php" class="<?php echo ($activePage=='newconcerns')?'active':''; ?>">
+        <a href="usersubmit.php" class="<?= $activePage == 'newconcerns' ? 'active' : '' ?>">
             <i class="fas fa-plus-circle me-1"></i> Submit New Concern
         </a>
-        <a href="userconcerns.php" class="<?php echo ($activePage=='concerns')?'active':''; ?>">
+        <a href="userconcerns.php" class="<?= $activePage == 'concerns' ? 'active' : '' ?>">
             <i class="fas fa-list-ul me-1"></i> All Concerns
         </a>
     </div>
 
-    <!-- Mobile menu toggle -->
     <button class="navbar-toggler" type="button" id="navbarToggle" aria-label="Toggle navigation">
         <i class="fas fa-bars"></i>
     </button>
 
-    <!-- User dropdown -->
     <div class="dropdown ms-auto">
         <button class="btn dropdown-toggle username-btn" aria-expanded="false" aria-haspopup="true">
             <?= htmlspecialchars($name) ?>
@@ -749,33 +654,35 @@ body {
 <div class="container">
     <div class="top-dashboard-grid">
         <div class="status-cards-wrapper">
+
             <div class="dashboard-card card-total">
                 <div class="card-icon"><i class="fas fa-boxes"></i></div>
-                <h1 class="card-value"><?php echo $total; ?></h1>
+                <h1 class="card-value"><?= $total ?></h1>
                 <p class="card-label">Total Concerns</p>
             </div>
 
             <div class="dashboard-card card-pending">
                 <div class="card-icon"><i class="fas fa-clock"></i></div>
-                <h1 class="card-value"><?php echo $pending; ?></h1>
+                <h1 class="card-value"><?= $pending ?></h1>
                 <p class="card-label">Pending</p>
             </div>
 
             <div class="dashboard-card card-inprogress">
                 <div class="card-icon"><i class="fas fa-tasks"></i></div>
-                <h1 class="card-value"><?php echo $inProgress; ?></h1>
+                <h1 class="card-value"><?= $inProgress ?></h1>
                 <p class="card-label">In Progress</p>
             </div>
             
             <div class="dashboard-card card-completed">
                 <div class="card-icon"><i class="fas fa-check-circle"></i></div>
-                <h1 class="card-value"><?php echo $completed; ?></h1>
+                <h1 class="card-value"><?= $completed ?></h1>
                 <p class="card-label">Completed</p>
             </div>
         </div>
 
         <div class="announcements-panel">
             <h3>Announcements</h3>
+
             <div id="announcementsContainer">
                 <div class="announcement-item">Loading announcements...</div>
             </div>
@@ -783,9 +690,7 @@ body {
     </div>
 
     <div class="cta-section">
-        <a href="usersubmit.php" id="submitConcernBtn">
-            <i class="fas fa-plus me-2"></i> Report a New Concern
-        </a>
+        <a href="usersubmit.php" id="submitConcernBtn"><i class="fas fa-plus me-2"></i> Report a New Concern</a>
     </div>
 
     <div class="recent-concerns-panel">
@@ -808,11 +713,11 @@ body {
                     <tbody>
                         <?php foreach ($recentConcerns as $concern): ?>
                             <tr>
-                                <td><?php echo htmlspecialchars($concern['ConcernID']); ?></td>
-                                <td class="fw-bold"><?php echo htmlspecialchars($concern['Concern_Title']); ?></td>
-                                <td><?php echo htmlspecialchars($concern['Room']); ?></td>
-                                <td><?php echo htmlspecialchars($concern['DateSubmittedFormatted']); ?></td>
-                                <td><?php echo htmlspecialchars($concern['Assigned_To']); ?></td>
+                                <td><?= htmlspecialchars($concern['ConcernID']) ?></td>
+                                <td class="fw-bold"><?= htmlspecialchars($concern['Concern_Title']) ?></td>
+                                <td><?= htmlspecialchars($concern['Room']) ?></td>
+                                <td><?= htmlspecialchars($concern['DateSubmittedFormatted']) ?></td>
+                                <td><?= htmlspecialchars($concern['Assigned_To']) ?></td>
                                 <td>
                                     <?php
                                     $status = htmlspecialchars($concern['Status']);
@@ -821,9 +726,7 @@ body {
                                     ?>
                                 </td>
                                 <td>
-                                    <!-- Updated View link with anchor -->
-                                    <a href="userconcerns.php#concern-<?php echo $concern['ConcernID']; ?>" 
-                                       class="btn btn-sm btn-outline-secondary">
+                                    <a href="userconcerns.php?open_concern=<?= $concern['ConcernID'] ?>" class="btn btn-sm btn-outline-secondary">
                                         <i class="fas fa-eye"></i> View
                                     </a>
                                 </td>
@@ -833,9 +736,7 @@ body {
                 </table>
             </div>
             <div class="text-end mt-3">
-                <a href="userconcerns.php" class="btn btn-sm btn-outline-secondary">
-                    View All Concerns <i class="fas fa-arrow-right ms-2"></i>
-                </a>
+                <a href="userconcerns.php" class="btn btn-sm btn-outline-secondary">View All Concerns <i class="fas fa-arrow-right ms-2"></i></a>
             </div>
         <?php else: ?>
             <div class="alert alert-info text-center">
@@ -845,91 +746,116 @@ body {
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+
 <script>
-// FIXED: Better mobile menu toggle with touch support
-document.addEventListener('DOMContentLoaded', function() {
-    const navbarToggle = document.getElementById('navbarToggle');
-    const navbarLinks = document.getElementById('navbarLinks');
-    
-    if (navbarToggle) {
-        navbarToggle.addEventListener('click', function(e) {
-            e.stopPropagation();
-            navbarLinks.classList.toggle('show');
-            
-            // FIXED: Prevent body scroll when menu is open on mobile
+    // FIXED: Better mobile menu toggle with touch support
+    document.addEventListener('DOMContentLoaded', function() {
+        const navbarToggle = document.getElementById('navbarToggle');
+        const navbarLinks = document.getElementById('navbarLinks');
+        
+        if (navbarToggle) {
+            navbarToggle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                navbarLinks.classList.toggle('show');
+            });
+        }
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const navbar = document.querySelector('.navbar');
+            if (!navbar.contains(event.target) && navbarLinks.classList.contains('show')) {
+                navbarLinks.classList.remove('show');
+            }
+        });
+
+        // FIXED: Prevent body scroll when menu is open on mobile
+        navbarToggle.addEventListener('click', function() {
             if (navbarLinks.classList.contains('show')) {
                 document.body.style.overflow = 'hidden';
             } else {
                 document.body.style.overflow = '';
             }
         });
-    }
 
-    // Close mobile menu when clicking outside
-    document.addEventListener('click', function(event) {
-        const navbar = document.querySelector('.navbar');
-        if (!navbar.contains(event.target) && navbarLinks.classList.contains('show')) {
-            navbarLinks.classList.remove('show');
-            document.body.style.overflow = '';
+        // Password change handler
+        const savePasswordBtn = document.getElementById('savePasswordBtn');
+        if (savePasswordBtn) {
+            savePasswordBtn.addEventListener('click', function(){
+                const currentPassword = document.getElementById('currentPassword').value;
+                const newPassword = document.getElementById('newPassword').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+
+                if (newPassword !== confirmPassword) {
+                    Swal.fire('Error', 'Passwords do not match!', 'error');
+                    return;
+                }
+
+                fetch('change_password.php', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({currentPassword, newPassword})
+                })
+                .then(res => res.json())
+                .then(data => {
+                    Swal.fire(data.success ? 'Success' : 'Error', data.message, data.success ? 'success' : 'error');
+                    if (data.success) {
+                        document.getElementById('changePasswordForm').reset();
+                        bootstrap.Modal.getInstance(document.getElementById('changePasswordModal')).hide();
+                    }
+                })
+                .catch(() => Swal.fire('Error', 'Something went wrong.', 'error'));
+            });
         }
     });
 
-    // FIXED: Close mobile menu when clicking on a link
-    const navLinks = document.querySelectorAll('.navbar .links a');
-    navLinks.forEach(link => {
-        link.addEventListener('click', function() {
-            navbarLinks.classList.remove('show');
-            document.body.style.overflow = '';
-        });
-    });
-});
+    function loadAnnouncements() {
+        fetch('get_announcement.php')
+            .then(response => response.json())
+            .then(announcements => {
+                const container = document.getElementById('announcementsContainer');
+                container.innerHTML = '';
 
-function loadAnnouncements() {
-    fetch('get_announcement.php')
-        .then(response => response.json())
-        .then(announcements => {
-            const container = document.getElementById('announcementsContainer');
-            container.innerHTML = '';
+                if (!announcements.length) {
+                    container.innerHTML = '<div class="announcement-item text-muted">No active announcements.</div>';
+                    return;
+                }
 
-            if (!announcements.length) {
-                container.innerHTML = '<div class="announcement-item text-muted">No active announcements.</div>';
-                return;
-            }
-
-            announcements.forEach(a => {
-                const btn = document.createElement('button');
-                btn.className = 'announcement-item w-100 text-start border-0 bg-transparent';
-                btn.innerHTML = `
-                    <div class="fw-bold" style="color:#275850;">${a.title}</div>
-                    <div class="text-muted small mb-1" style="font-size:11px;">${a.date}</div>
-                `;
-                btn.addEventListener('click', () => showAnnouncementModal(a));
-                container.appendChild(btn);
+                announcements.forEach(a => {
+                    const btn = document.createElement('button');
+                    btn.className = 'announcement-item w-100 text-start border-0 bg-transparent';
+                    btn.innerHTML = `
+                        <div class="fw-bold" style="color:#275850;">${a.title}</div>
+                        <div class="text-muted small mb-1" style="font-size:12px;">${a.date}</div>
+                    `;
+                    btn.addEventListener('click', () => showAnnouncementModal(a));
+                    container.appendChild(btn);
+                });
+            })
+            .catch(() => {
+                document.getElementById('announcementsContainer').innerHTML =
+                    '<div class="announcement-item text-danger">Error loading announcements.</div>';
             });
-        })
-        .catch(() => {
-            document.getElementById('announcementsContainer').innerHTML =
-                '<div class="announcement-item text-danger">Error loading announcements.</div>';
-        });
-}
+    }
 
-function showAnnouncementModal(a) {
-    const modalTitle = document.getElementById('announcementModalLabel');
-    const modalBody = document.getElementById('announcementModalBody');
+    function showAnnouncementModal(a) {
+        const modalTitle = document.getElementById('announcementModalLabel');
+        const modalBody = document.getElementById('announcementModalBody');
 
-    modalTitle.textContent = a.title;
-    modalBody.innerHTML = `
-        <p class="text-muted" style="font-size:12px;">Posted on ${a.date}</p>
-        <div style="white-space:pre-line; font-size:14px;">${a.details}</div>
-    `;
+        modalTitle.textContent = a.title;
+        modalBody.innerHTML = `
+            <p class="text-muted" style="font-size:12px;">Posted on ${a.date}</p>
+            <div style="white-space:pre-line;">${a.details}</div>
+        `;
 
-    const modal = new bootstrap.Modal(document.getElementById('announcementModal'));
-    modal.show();
-}
+        const modal = new bootstrap.Modal(document.getElementById('announcementModal'));
+        modal.show();
+    }
 
-loadAnnouncements();
-setInterval(loadAnnouncements, 30000); // auto-refresh every 30 seconds
+    loadAnnouncements();
+    setInterval(loadAnnouncements, 30000); // auto-refresh every 30 seconds
 </script>
 
 <!-- Announcement Modal -->
@@ -948,7 +874,7 @@ setInterval(loadAnnouncements, 30000); // auto-refresh every 30 seconds
   </div>
 </div>
 
- <!-- Change Password Modal -->
+<!-- Change Password Modal -->
 <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
@@ -979,36 +905,5 @@ setInterval(loadAnnouncements, 30000); // auto-refresh every 30 seconds
     </div>
   </div>
 </div>
-    
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
-
-<script>
-document.getElementById('savePasswordBtn').addEventListener('click', function(){
-    const currentPassword = document.getElementById('currentPassword').value;
-    const newPassword = document.getElementById('newPassword').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
-
-    if(newPassword !== confirmPassword){
-        Swal.fire('Error','Passwords do not match!','error');
-        return;
-    }
-
-    fetch('change_password.php', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({currentPassword,newPassword})
-    })
-    .then(res => res.json())
-    .then(data => {
-        Swal.fire(data.success ? 'Success':'Error', data.message, data.success?'success':'error');
-        if(data.success){
-            document.getElementById('changePasswordForm').reset();
-            bootstrap.Modal.getInstance(document.getElementById('changePasswordModal')).hide();
-        }
-    })
-    .catch(()=> Swal.fire('Error','Something went wrong.','error'));
-});
-</script>
-
 </body>
 </html>
