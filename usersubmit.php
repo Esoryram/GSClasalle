@@ -546,7 +546,7 @@
                             <div data-value="Low">Low</div>
                             <div data-value="Medium">Medium</div>
                             <div data-value="High">High</div>
-                            <div data-value="Critical">Critical</div>
+                            <div data-value="Urgent">Urgent</div>
                         </div>
                     </div>
                     <input type="hidden" name="priority" id="priorityInput" required>
