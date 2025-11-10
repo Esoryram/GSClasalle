@@ -69,58 +69,78 @@ $announcementsResult = mysqli_query($conn, $announcementsQuery);
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<!-- Google Fonts Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+
     <style>
-        /* Keep your existing CSS styles here */
         body {
             margin: 0;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
             background: #f9fafb;
+            overflow-x: hidden;
         }
 
+        /* Navbar styling */
         .navbar {
             display: flex;
             align-items: center;
-            background: linear-gradient(135deg, #163a37, #1c4440, #275850, #1f9158);
-            padding: 15px 30px;
+            background: linear-gradient(135deg, #087830, #3c4142);
+            padding: 12px 15px;
             color: white;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            position: relative;
+            width: 100%;
+            box-sizing: border-box;
         }
 
+        /* Logo */
         .logo {
             display: flex;
             align-items: center;
-            margin-right: 25px;
+            margin-right: 15px; 
         }
 
         .logo img {
-            height: 40px;
-            width: auto;
+            height: 35px; 
+            width: auto; 
+            object-fit: contain;
         }
 
+        /* Navbar links */
         .navbar .links {
             display: flex;
-            gap: 20px;
+            gap: 12px;
             margin-right: auto;
         }
 
         .navbar .links a {
-            color: white;
+            color: white; 
             text-decoration: none;
-            font-weight: bold;
-            font-size: 16px;
-            padding: 6px 12px;
+            font-weight: bold; 
+            font-size: 14px;
+            padding: 8px 12px; 
             border-radius: 5px;
             transition: all 0.3s ease;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
         }
 
         .navbar .links a.active {
             background: #4ba06f;
             border: 1px solid #07491f;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+            color: white;
         }
 
         .navbar .links a:hover {
             background: #107040;
+            color: white;
+        }
+
+        .navbar .links a i {
+            margin-right: 5px;
         }
 
         .dropdown {
@@ -130,16 +150,6 @@ $announcementsResult = mysqli_query($conn, $announcementsQuery);
             gap: 5px;
         }
 
-        .dropdown .username {
-            font-weight: bold;
-            font-size: 16px;
-            padding: 6px 12px;
-        }
-
-        .dropdown-toggle {
-            cursor: pointer;
-        }
-
         .dropdown-menu {
             display: none;
             position: absolute;
@@ -147,7 +157,7 @@ $announcementsResult = mysqli_query($conn, $announcementsQuery);
             right: 0;
             background: white;
             min-width: 180px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
             border-radius: 5px;
             overflow: hidden;
             z-index: 10;
@@ -165,8 +175,19 @@ $announcementsResult = mysqli_query($conn, $announcementsQuery);
             font-size: 14px;
         }
 
-        .dropdown-menu a:hover {
-            background: #f1f1f1;
+        .dropdown .username-btn {
+            color: white !important;
+            background: none !important;
+            border: none !important;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .dropdown .username-btn:hover,
+        .dropdown .username-btn:focus {
+            color: white !important;
+            background: none !important;
+            border: none !important;
         }
 
         .container {
@@ -373,21 +394,36 @@ $announcementsResult = mysqli_query($conn, $announcementsQuery);
         </div>
 
         <div class="links">
-            <a href="admindb.php" class="active">Dashboard</a>
-            <a href="adminconcerns.php">Concerns</a>
-            <a href="adminreports.php">Reports</a>
-            <a href="adminfeedback.php">Feedback</a>
-            <a href="adminannouncement.php">Announcements</a>
+            <a href="admindb.php" class="<?php echo ($activePage == 'dashboard') ? 'active' : ''; ?>">
+                <i class="fas fa-home me-1"></i> Dashboard
+            </a>
+            <a href="adminconcerns.php" class="<?php echo ($activePage == 'concerns') ? 'active' : ''; ?>">
+                <i class="fas fa-list-ul me-1"></i> Concerns
+            </a>
+            <a href="adminreports.php" class="<?php echo ($activePage == 'reports') ? 'active' : ''; ?>">
+                <i class="fas fa-chart-bar"></i> Reports
+            </a>
+            <a href="adminfeedback.php" class="<?php echo ($activePage == 'feedback') ? 'active' : ''; ?>">
+                <i class="fas fa-comment-alt"></i> Feedback
+            </a>
+            <a href="adminannouncement.php" class="<?php echo ($activePage == 'announcements') ? 'active' : ''; ?>">
+                <i class="fas fa-bullhorn"></i> Announcements
+            </a>
         </div>
 
-        <div class="dropdown">
-            <span class="username"><?php echo htmlspecialchars($name); ?></span>
-            <span class="dropdown-toggle">
-                <div class="dropdown-menu">
-                    <a href="#" id="changePasswordLink">Change Password</a>
-                    <a href="login.php">Logout</a>
-                </div>
-            </span>
+        <!-- User dropdown -->
+        <div class="dropdown ms-auto">
+            <button class="btn dropdown-toggle username-btn" aria-expanded="false" aria-haspopup="true">
+                <i class="fas fa-user-circle me-1"></i> <?= htmlspecialchars($name) ?>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                    <i class="fas fa-key me-2"></i>Change Password
+                </a></li>
+                <li><a class="dropdown-item" href="login.php">
+                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                </a></li>
+            </ul>
         </div>
     </div>
 
@@ -431,7 +467,7 @@ $announcementsResult = mysqli_query($conn, $announcementsQuery);
                 <div class="dashboard-card card-total">
                     <div class="card-icon"><i class="fas fa-boxes"></i></div>
                     <h1 class="card-value"><?php echo $total; ?></h1>
-                    <p class="card-label">Total Complaints</p>
+                    <p class="card-label">Total Concerns</p>
                 </div>
 
                 <div class="dashboard-card card-pending">
@@ -545,13 +581,7 @@ $announcementsResult = mysqli_query($conn, $announcementsQuery);
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
-    <script>
-    // Open modal when clicking "Change Password"
-    document.getElementById('changePasswordLink').addEventListener('click', e => {
-        e.preventDefault();
-        new bootstrap.Modal(document.getElementById('changePasswordModal')).show();
-    });
-
+<script>
     document.getElementById('savePasswordBtn').addEventListener('click', () => {
         const currentPassword = document.getElementById('currentPassword').value.trim();
         const newPassword = document.getElementById('newPassword').value.trim();
@@ -584,6 +614,6 @@ $announcementsResult = mysqli_query($conn, $announcementsQuery);
         })
         .catch(() => Swal.fire('Error', 'Something went wrong.', 'error'));
     });
-    </script>
+</script>
 </body>
 </html>

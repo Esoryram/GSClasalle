@@ -454,6 +454,28 @@ if ($accountID) {
             background-color: #f0f0f0; 
         }
 
+        /* Password toggle button styles */
+        .input-group .toggle-password {
+            border: 1px solid #ced4da;
+            border-left: none;
+            background: white;
+            transition: all 0.2s;
+            min-width: 45px;
+        }
+
+        .input-group .toggle-password:hover {
+            background: #f8f9fa;
+        }
+
+        .input-group .toggle-password.active {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .input-group .toggle-password.active i::before {
+            content: "\f070"; /* fa-eye-slash */
+        }
+
         /* FIXED: Mobile Responsive - iPhone 12 Pro is 390px wide */
         @media (max-width: 480px) {
             .navbar {
@@ -635,8 +657,8 @@ if ($accountID) {
 
     <div class="dropdown ms-auto">
         <button class="btn dropdown-toggle username-btn" aria-expanded="false" aria-haspopup="true">
-            <?= htmlspecialchars($name) ?>
-        </button>
+                <i class="fas fa-user-circle me-1"></i> <?= htmlspecialchars($name) ?>
+            </button>
         <ul class="dropdown-menu dropdown-menu-end">
             <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
                 <i class="fas fa-key me-2"></i>Change Password
@@ -780,6 +802,49 @@ if ($accountID) {
             }
         });
 
+        // Password visibility toggle functionality
+        document.querySelectorAll('.toggle-password').forEach(button => {
+            button.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                const passwordInput = document.getElementById(targetId);
+                const icon = this.querySelector('i');
+                
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    this.classList.add('active');
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    passwordInput.type = 'password';
+                    this.classList.remove('active');
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+                
+                // Focus back on the input for better UX
+                passwordInput.focus();
+            });
+        });
+
+        // Close password visibility when modal is hidden
+        const changePasswordModal = document.getElementById('changePasswordModal');
+        if (changePasswordModal) {
+            changePasswordModal.addEventListener('hidden.bs.modal', function() {
+                // Reset all password fields to hidden and reset icons
+                document.querySelectorAll('input[type="text"][id*="Password"]').forEach(input => {
+                    input.type = 'password';
+                });
+                document.querySelectorAll('.toggle-password').forEach(button => {
+                    button.classList.remove('active');
+                    const icon = button.querySelector('i');
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                });
+                // Reset the form
+                document.getElementById('changePasswordForm').reset();
+            });
+        }
+
         // Password change handler
         const savePasswordBtn = document.getElementById('savePasswordBtn');
         if (savePasswordBtn) {
@@ -788,8 +853,18 @@ if ($accountID) {
                 const newPassword = document.getElementById('newPassword').value;
                 const confirmPassword = document.getElementById('confirmPassword').value;
 
+                if (!currentPassword || !newPassword || !confirmPassword) {
+                    Swal.fire('Error', 'Please fill in all password fields!', 'error');
+                    return;
+                }
+
                 if (newPassword !== confirmPassword) {
                     Swal.fire('Error', 'Passwords do not match!', 'error');
+                    return;
+                }
+
+                if (newPassword.length < 6) {
+                    Swal.fire('Error', 'New password must be at least 6 characters long!', 'error');
                     return;
                 }
 
@@ -867,9 +942,6 @@ if ($accountID) {
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body" id="announcementModalBody" style="font-size:14px;"></div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-success" data-bs-dismiss="modal">Close</button>
-      </div>
     </div>
   </div>
 </div>
@@ -886,15 +958,30 @@ if ($accountID) {
         <form id="changePasswordForm">
           <div class="mb-3">
             <label for="currentPassword" class="form-label">Current Password</label>
-            <input type="password" class="form-control" id="currentPassword" required>
+            <div class="input-group">
+              <input type="password" class="form-control" id="currentPassword" required>
+              <button type="button" class="btn btn-outline-secondary toggle-password" data-target="currentPassword">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
           </div>
           <div class="mb-3">
             <label for="newPassword" class="form-label">New Password</label>
-            <input type="password" class="form-control" id="newPassword" required>
+            <div class="input-group">
+              <input type="password" class="form-control" id="newPassword" required>
+              <button type="button" class="btn btn-outline-secondary toggle-password" data-target="newPassword">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
           </div>
           <div class="mb-3">
             <label for="confirmPassword" class="form-label">Confirm New Password</label>
-            <input type="password" class="form-control" id="confirmPassword" required>
+            <div class="input-group">
+              <input type="password" class="form-control" id="confirmPassword" required>
+              <button type="button" class="btn btn-outline-secondary toggle-password" data-target="confirmPassword">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
           </div>
         </form>
       </div>

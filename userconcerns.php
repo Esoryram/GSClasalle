@@ -567,8 +567,8 @@ $stmt->close();
 
     <div class="dropdown ms-auto">
         <button class="btn dropdown-toggle username-btn" aria-expanded="false" aria-haspopup="true">
-            <?= htmlspecialchars($name) ?>
-        </button>
+                <i class="fas fa-user-circle me-1"></i> <?= htmlspecialchars($name) ?>
+            </button>
         <ul class="dropdown-menu dropdown-menu-end">
             <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
                 <i class="fas fa-key me-2"></i>Change Password

@@ -93,97 +93,128 @@ if ($generateClicked) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Reports</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-<style>
-body {
-    background-color: white;
-    font-family: Arial, sans-serif;
-    margin: 0;
-}
+<!-- Google Fonts Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 
-.navbar {
-    display: flex;
-    align-items: center;
-    background: linear-gradient(135deg, #163a37, #1c4440, #275850, #1f9158);
-    padding: 15px 30px;
-    color: white;
-}
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            background: #f9fafb;
+            overflow-x: hidden;
+        }
 
-.logo {
-    display: flex;
-    align-items: center;
-    margin-right: 25px;
-}
+        /* Navbar styling */
+        .navbar {
+            display: flex;
+            align-items: center;
+            background: linear-gradient(135deg, #087830, #3c4142);
+            padding: 12px 15px;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            position: relative;
+            width: 100%;
+            box-sizing: border-box;
+        }
 
-.logo img {
-    height: 40px;
-    width: auto;
-}
+        /* Logo */
+        .logo {
+            display: flex;
+            align-items: center;
+            margin-right: 15px; 
+        }
 
-.navbar .links {
-    display: flex;
-    gap: 20px;
-    margin-right: auto;
-}
+        .logo img {
+            height: 35px; 
+            width: auto; 
+            object-fit: contain;
+        }
 
-.navbar .links a {
-    color: white;
-    text-decoration: none;
-    font-weight: bold;
-    padding: 6px 12px;
-    border-radius: 5px;
-    transition: 0.3s;
-}
+        /* Navbar links */
+        .navbar .links {
+            display: flex;
+            gap: 12px;
+            margin-right: auto;
+        }
 
-.navbar .links a.active {
-    background-color: #4ba06f;
-}
+        .navbar .links a {
+            color: white; 
+            text-decoration: none;
+            font-weight: bold; 
+            font-size: 14px;
+            padding: 8px 12px; 
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+        }
 
-.navbar .links a:hover {
-    background-color: #107040;
-}
+        .navbar .links a.active {
+            background: #4ba06f;
+            border: 1px solid #07491f;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+            color: white;
+        }
 
-.dropdown {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
+        .navbar .links a:hover {
+            background: #107040;
+            color: white;
+        }
 
-.dropdown .username {
-    font-weight: bold;
-    font-size: 16px;
-    padding: 6px 12px;
-}
+        .navbar .links a i {
+            margin-right: 5px;
+        }
 
-.dropdown:hover .dropdown-menu {
-    display: block;
-}
+        .dropdown {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
 
-.dropdown-menu {
-    display: none;
-    position: absolute;
-    top: 100%;
-    right: 0;
-    background-color: white;
-    min-width: 180px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    border-radius: 5px;
-    overflow: hidden;
-    z-index: 10;
-}
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            min-width: 180px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            border-radius: 5px;
+            overflow: hidden;
+            z-index: 10;
+        }
 
-.dropdown-menu a {
-    display: block;
-    padding: 12px 16px;
-    text-decoration: none;
-    color: #333;
-    font-size: 14px;
-}
+        .dropdown:hover .dropdown-menu {
+            display: block;
+        }
 
-.dropdown-menu a:hover {
-    background-color: #f1f1f1;
-}
+        .dropdown-menu a {
+            display: block;
+            padding: 12px 16px;
+            text-decoration: none;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .dropdown .username-btn {
+            color: white !important;
+            background: none !important;
+            border: none !important;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .dropdown .username-btn:hover,
+        .dropdown .username-btn:focus {
+            color: white !important;
+            background: none !important;
+            border: none !important;
+        }
 
 .page-container {
     padding: 30px 40px;
@@ -287,34 +318,53 @@ body {
 </head>
 <body>
 
-<div class="navbar">
-    <div class="logo">
-        <img src="img/LSULogo.png" alt="LSU Logo">
+    <div class="navbar">
+        <div class="logo">
+            <img src="img/LSULogo.png" alt="LSU Logo">
+        </div>
+
+        <div class="links">
+            <a href="admindb.php" class="<?php echo ($activePage == 'dashboard') ? 'active' : ''; ?>">
+                <i class="fas fa-home me-1"></i> Dashboard
+            </a>
+            <a href="adminconcerns.php" class="<?php echo ($activePage == 'concerns') ? 'active' : ''; ?>">
+                <i class="fas fa-list-ul me-1"></i> Concerns
+            </a>
+            <a href="adminreports.php" class="<?php echo ($activePage == 'reports') ? 'active' : ''; ?>">
+                <i class="fas fa-chart-bar"></i> Reports
+            </a>
+            <a href="adminfeedback.php" class="<?php echo ($activePage == 'feedback') ? 'active' : ''; ?>">
+                <i class="fas fa-comment-alt"></i> Feedback
+            </a>
+            <a href="adminannouncement.php" class="<?php echo ($activePage == 'announcements') ? 'active' : ''; ?>">
+                <i class="fas fa-bullhorn"></i> Announcements
+            </a>
+        </div>
+
+        <!-- User dropdown -->
+        <div class="dropdown ms-auto">
+            <button class="btn dropdown-toggle username-btn" aria-expanded="false" aria-haspopup="true">
+                <i class="fas fa-user-circle me-1"></i> <?= htmlspecialchars($name) ?>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                    <i class="fas fa-key me-2"></i>Change Password
+                </a></li>
+                <li><a class="dropdown-item" href="login.php">
+                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                </a></li>
+            </ul>
+        </div>
     </div>
-    <div class="links">
-        <a href="admindb.php" class="<?= ($activePage == 'dashboard') ? 'active' : ''; ?>">Dashboard</a>
-        <a href="adminconcerns.php" class="<?= ($activePage == 'concerns') ? 'active' : ''; ?>">Concerns</a>
-        <a href="adminreports.php" class="<?= ($activePage == 'reports') ? 'active' : ''; ?>">Reports</a>
-        <a href="adminfeedback.php" class="<?= ($activePage == 'feedback') ? 'active' : ''; ?>">Feedback</a>
-        <a href="adminannouncement.php" class="<?= ($activePage == 'announcements') ? 'active' : ''; ?>">Announcements</a>
-    </div>
-    <div class="dropdown">
-        <span class="username"><?= htmlspecialchars($name); ?></span>
-        <span class="dropdown-toggle">
-            <div class="dropdown-menu">
-                <a href="#" id="changePasswordLink">Change Password</a>
-                <a href="login.php">Logout</a>
-            </div>
-        </span>
-    </div>
-</div>
 
     <!-- Change Password Modal -->
     <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header" style="background-color:#1f9158; color:white;">
-            <h5 class="modal-title" id="changePasswordLabel">Change Password</h5>
+            <h5 class="modal-title" id="changePasswordLabel">
+                <i class="fas fa-key me-2"></i>Change Password
+            </h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
@@ -335,7 +385,9 @@ body {
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-success" id="savePasswordBtn">Change Password</button>
+            <button type="button" class="btn btn-success" id="savePasswordBtn">
+                <i class="fas fa-save me-1"></i>Change Password
+            </button>
           </div>
         </div>
       </div>
@@ -432,14 +484,24 @@ body {
                                     <td>
                                         <?php 
                                             $statusClass = '';
-                                            switch ($row['Status']) {
-                                                case 'Completed':   $statusClass = 'bg-success'; break;
-                                                case 'In Progress': $statusClass = 'bg-warning text-dark'; break;
-                                                case 'Pending':     $statusClass = 'bg-danger'; break;
-                                                case 'Cancelled':   $statusClass = 'bg-secondary'; break;
-                                                default:            $statusClass = 'bg-info';
+                                                switch ($row['Status']) {
+                                            case 'Completed':
+                                                $statusClass = 'bg-success text-white'; // Green
+                                            break;
+                                            case 'In Progress':
+                                                $statusClass = 'bg-primary text-white'; // Blue
+                                            break;
+                                            case 'Pending':
+                                                $statusClass = 'bg-warning text-dark'; // Yellow
+                                            break;
+                                            case 'Cancelled':
+                                                $statusClass = 'bg-danger text-white'; // Red
+                                            break;
+                                            default:
+                                                $statusClass = 'bg-secondary text-white';
                                             }
                                         ?>
+                                        
                                         <span class="badge <?= $statusClass; ?> rounded-pill px-2 py-1">
                                             <?= htmlspecialchars($row['Status']); ?>
                                         </span>
@@ -462,15 +524,7 @@ body {
     <?php endif; ?>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
-    <script>
-    // Open modal when clicking "Change Password"
-    document.getElementById('changePasswordLink').addEventListener('click', e => {
-        e.preventDefault();
-        new bootstrap.Modal(document.getElementById('changePasswordModal')).show();
-    });
-
+<script>
     document.getElementById('savePasswordBtn').addEventListener('click', () => {
         const currentPassword = document.getElementById('currentPassword').value.trim();
         const newPassword = document.getElementById('newPassword').value.trim();
@@ -503,7 +557,9 @@ body {
         })
         .catch(() => Swal.fire('Error', 'Something went wrong.', 'error'));
     });
-    </script>
+</script>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
 </body>
 </html>

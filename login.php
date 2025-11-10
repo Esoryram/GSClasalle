@@ -243,7 +243,7 @@ h2 {
 
 .input-container input {
     width: 100%;
-    padding: 12px 12px 12px 40px;
+    padding: 12px 45px 12px 40px; /* Added right padding for toggle button */
     border: 1px solid #ccc;
     border-radius: 5px;
     background-color: #d9d9d9;
@@ -252,6 +252,32 @@ h2 {
     box-sizing: border-box;
     font-family: 'Poppins', sans-serif;
     font-weight: 400;
+}
+
+/* Password toggle button styles */
+.password-toggle {
+    position: absolute;
+    right: 30px;
+    top: 30%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #555;
+    cursor: pointer;
+    width: auto;
+    padding: 5px;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.password-toggle:hover {
+    color: #333;
+}
+
+.password-toggle.active i::before {
+    content: "\f070"; /* fa-eye-slash */
 }
 
 button.login-btn {
@@ -379,6 +405,15 @@ button.login-btn {
     .back-btn i {
         font-size: 16px;
     }
+    
+    .input-container input {
+        padding: 10px 40px 10px 35px;
+    }
+    
+    .password-toggle {
+        right: 8px;
+        font-size: 15px;
+    }
 }
 
 /* For mobile phones */
@@ -423,12 +458,17 @@ button.login-btn {
     }
     
     .input-container input {
-        padding: 10px 10px 10px 35px;
+        padding: 10px 35px 10px 35px;
         font-size: 13px;
     }
     
     .input-container i {
         font-size: 16px;
+    }
+    
+    .password-toggle {
+        right: 8px;
+        font-size: 14px;
     }
     
     button {
@@ -504,12 +544,17 @@ button.login-btn {
     }
     
     .input-container input {
-        padding: 8px 8px 8px 30px;
+        padding: 8px 30px 8px 30px;
     }
     
     .input-container i {
         font-size: 14px;
         left: 8px;
+    }
+    
+    .password-toggle {
+        right: 6px;
+        font-size: 13px;
     }
     
     button {
@@ -585,7 +630,12 @@ button.login-btn {
     }
     
     .input-container input {
-        padding: 6px 6px 6px 30px;
+        padding: 6px 25px 6px 30px;
+    }
+    
+    .password-toggle {
+        right: 5px;
+        font-size: 13px;
     }
     
     button {
@@ -644,7 +694,10 @@ if (!$role) {
         <form method="POST">
             <div class="input-container">
                 <i class="fa-solid fa-lock"></i>
-                <input type="password" name="password" placeholder="Enter Master Password" required>
+                <input type="password" name="password" id="masterPassword" placeholder="Enter Master Password" required>
+                <button type="button" class="password-toggle" data-target="masterPassword">
+                    <i class="fa-solid fa-eye"></i>
+                </button>
             </div>
             <button type="submit" name="verify">Verify</button>
         </form>
@@ -667,7 +720,10 @@ if (!$role) {
                 </div>
                 <div class="input-container">
                     <i class="fa-solid fa-lock"></i>
-                    <input type="password" name="password" placeholder="Password" required>
+                    <input type="password" name="password" id="loginPassword" placeholder="Password" required>
+                    <button type="button" class="password-toggle" data-target="loginPassword">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
                 </div>
                 <button type="submit" name="login" class="login-btn">Login</button>
             </form>
@@ -685,6 +741,56 @@ if (!$role) {
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
 
 <script>
+// Password visibility toggle functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize password toggle functionality
+    document.querySelectorAll('.password-toggle').forEach(button => {
+        button.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            const passwordInput = document.getElementById(targetId);
+            const icon = this.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                this.classList.add('active');
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                this.classList.remove('active');
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+            
+            // Focus back on the input for better UX
+            passwordInput.focus();
+        });
+    });
+
+    // Prevent form submission when clicking password toggle buttons
+    document.querySelectorAll('.password-toggle').forEach(button => {
+        button.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+        });
+        
+        button.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+        });
+    });
+
+    // Auto-focus on username field when login form loads
+    const usernameInput = document.querySelector('input[name="username"]');
+    if (usernameInput) {
+        usernameInput.focus();
+    }
+
+    // Auto-focus on master password field when verification form loads
+    const masterPasswordInput = document.getElementById('masterPassword');
+    if (masterPasswordInput) {
+        masterPasswordInput.focus();
+    }
+});
+
 <?php if ($alert_type && $alert_message): ?>
     Swal.fire({
         icon: '<?php echo $alert_type == "success" ? "success" : "error"; ?>',
@@ -692,6 +798,21 @@ if (!$role) {
         text: '<?php echo $alert_message; ?>',
         confirmButtonColor: '<?php echo $alert_type == "success" ? "#1f9158" : "#d33"; ?>',
         confirmButtonText: 'OK'
+    }).then((result) => {
+        // Auto-focus on appropriate field after alert is closed
+        if (result.isConfirmed) {
+            const usernameInput = document.querySelector('input[name="username"]');
+            const passwordInput = document.getElementById('loginPassword');
+            const masterPasswordInput = document.getElementById('masterPassword');
+            
+            if (usernameInput && '<?php echo $alert_type; ?>' === 'error') {
+                usernameInput.focus();
+            } else if (passwordInput && '<?php echo $alert_type; ?>' === 'error') {
+                passwordInput.focus();
+            } else if (masterPasswordInput && '<?php echo $alert_type; ?>' === 'error') {
+                masterPasswordInput.focus();
+            }
+        }
     });
 <?php endif; ?>
 </script>

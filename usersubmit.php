@@ -213,7 +213,8 @@
         }
 
         .equipment-dropdown .form-check {
-            margin-bottom: 0; /* Reduce margin to fit more items */
+            margin-bottom: 0;
+            margin-left: 20px; /* Reduce margin to fit more items */
             padding: 10px 12px; /* Consistent padding */
             border-bottom: 1px solid #f8f9fa;
             transition: background-color 0.2s;
@@ -452,7 +453,6 @@
                     <div class="equipment-dropdown" id="equipmentSelect">
                         <div class="select-selected placeholder">Select equipment/facility</div>
                         <div class="select-items">
-                            <!-- Removed the nested equipment-checklist div to prevent double scrollbar -->
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" name="equipment[]" value="Air Conditioner" id="equip1">
                                 <label class="form-check-label" for="equip1">Air Conditioner</label>

@@ -37,54 +37,80 @@ $result = mysqli_query($conn, $query);
     <title>Concerns</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <!-- Google Fonts Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 
     <style>
         body {
-            background: white;
-            font-family: Arial, sans-serif;
             margin: 0;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            background: #f9fafb;
+            overflow-x: hidden;
         }
 
+        /* Navbar styling */
         .navbar {
             display: flex;
             align-items: center;
-            background: linear-gradient(135deg, #163a37, #1c4440, #275850, #1f9158);
-            padding: 15px 30px;
+            background: linear-gradient(135deg, #087830, #3c4142);
+            padding: 12px 15px;
             color: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            position: relative;
+            width: 100%;
+            box-sizing: border-box;
         }
 
+        /* Logo */
         .logo {
             display: flex;
             align-items: center;
-            margin-right: 25px;
+            margin-right: 15px; 
         }
 
         .logo img {
-            height: 40px;
-            width: auto;
+            height: 35px; 
+            width: auto; 
+            object-fit: contain;
         }
 
+        /* Navbar links */
         .navbar .links {
             display: flex;
-            gap: 20px;
+            gap: 12px;
             margin-right: auto;
         }
 
         .navbar .links a {
-            color: white;
+            color: white; 
             text-decoration: none;
-            font-weight: bold;
-            padding: 6px 12px;
+            font-weight: bold; 
+            font-size: 14px;
+            padding: 8px 12px; 
             border-radius: 5px;
-            transition: 0.3s;
+            transition: all 0.3s ease;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
         }
 
         .navbar .links a.active {
             background: #4ba06f;
+            border: 1px solid #07491f;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+            color: white;
         }
 
         .navbar .links a:hover {
             background: #107040;
+            color: white;
+        }
+
+        .navbar .links a i {
+            margin-right: 5px;
         }
 
         .dropdown {
@@ -92,16 +118,6 @@ $result = mysqli_query($conn, $query);
             display: flex;
             align-items: center;
             gap: 5px;
-        }
-
-        .dropdown .username {
-            font-weight: bold;
-            font-size: 16px;
-            padding: 6px 12px;
-        }
-
-        .dropdown:hover .dropdown-menu {
-            display: block;
         }
 
         .dropdown-menu {
@@ -117,6 +133,10 @@ $result = mysqli_query($conn, $query);
             z-index: 10;
         }
 
+        .dropdown:hover .dropdown-menu {
+            display: block;
+        }
+
         .dropdown-menu a {
             display: block;
             padding: 12px 16px;
@@ -125,8 +145,19 @@ $result = mysqli_query($conn, $query);
             font-size: 14px;
         }
 
-        .dropdown-menu a:hover {
-            background: #f1f1f1;
+        .dropdown .username-btn {
+            color: white !important;
+            background: none !important;
+            border: none !important;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .dropdown .username-btn:hover,
+        .dropdown .username-btn:focus {
+            color: white !important;
+            background: none !important;
+            border: none !important;
         }
 
         .table thead {
@@ -169,10 +200,6 @@ $result = mysqli_query($conn, $query);
             margin: 0 40px 40px 40px;
         }
 
-        .concern-row:hover {
-            background-color: #e9ecef;
-        }
-
         .assign-btn {
             font-size: 13px;
             padding: 6px 16px;
@@ -186,12 +213,12 @@ $result = mysqli_query($conn, $query);
         }
 
         .assign-btn.unassigned {
-            background-color: #198754;
+            background-color: #ff0000;
             color: white;
         }
 
         .assign-btn.assigned {
-            background-color: #ffc107;
+            background-color: #198754;
             color: #212529;
         }
 
@@ -209,21 +236,36 @@ $result = mysqli_query($conn, $query);
         </div>
 
         <div class="links">
-            <a href="admindb.php" class="<?php echo ($activePage == 'dashboard') ? 'active' : ''; ?>">Dashboard</a>
-            <a href="adminconcerns.php" class="<?php echo ($activePage == 'concerns') ? 'active' : ''; ?>">Concerns</a>
-            <a href="adminreports.php" class="<?php echo ($activePage == 'reports') ? 'active' : ''; ?>">Reports</a>
-            <a href="adminfeedback.php" class="<?php echo ($activePage == 'feedback') ? 'active' : ''; ?>">Feedback</a>
-            <a href="adminannouncement.php" class="<?php echo ($activePage == 'announcements') ? 'active' : ''; ?>">Announcements</a>
+            <a href="admindb.php" class="<?php echo ($activePage == 'dashboard') ? 'active' : ''; ?>">
+                <i class="fas fa-home me-1"></i> Dashboard
+            </a>
+            <a href="adminconcerns.php" class="<?php echo ($activePage == 'concerns') ? 'active' : ''; ?>">
+                <i class="fas fa-list-ul me-1"></i> Concerns
+            </a>
+            <a href="adminreports.php" class="<?php echo ($activePage == 'reports') ? 'active' : ''; ?>">
+                <i class="fas fa-chart-bar"></i> Reports
+            </a>
+            <a href="adminfeedback.php" class="<?php echo ($activePage == 'feedback') ? 'active' : ''; ?>">
+                <i class="fas fa-comment-alt"></i> Feedback
+            </a>
+            <a href="adminannouncement.php" class="<?php echo ($activePage == 'announcements') ? 'active' : ''; ?>">
+                <i class="fas fa-bullhorn"></i> Announcements
+            </a>
         </div>
 
-        <div class="dropdown">
-            <span class="username"><?php echo htmlspecialchars($name); ?></span>
-            <span class="dropdown-toggle">
-                <div class="dropdown-menu">
-                    <a href="#" id="changePasswordLink">Change Password</a>
-                    <a href="login.php">Logout</a>
-                </div>
-            </span>
+        <!-- User dropdown -->
+        <div class="dropdown ms-auto">
+            <button class="btn dropdown-toggle username-btn" aria-expanded="false" aria-haspopup="true">
+                <i class="fas fa-user-circle me-1"></i> <?= htmlspecialchars($name) ?>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                    <i class="fas fa-key me-2"></i>Change Password
+                </a></li>
+                <li><a class="dropdown-item" href="login.php">
+                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                </a></li>
+            </ul>
         </div>
     </div>
 
@@ -232,7 +274,9 @@ $result = mysqli_query($conn, $query);
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header" style="background-color:#1f9158; color:white;">
-            <h5 class="modal-title" id="changePasswordLabel">Change Password</h5>
+            <h5 class="modal-title" id="changePasswordLabel">
+                <i class="fas fa-key me-2"></i>Change Password
+            </h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
@@ -253,15 +297,19 @@ $result = mysqli_query($conn, $query);
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-success" id="savePasswordBtn">Change Password</button>
+            <button type="button" class="btn btn-success" id="savePasswordBtn">
+                <i class="fas fa-save me-1"></i>Change Password
+            </button>
           </div>
         </div>
       </div>
     </div>
 
     <div class="page-header">
-        <h3>All Concerns</h3>
-        <div class="realtime-clock" id="currentDateTime"></div>
+        <h3><i class="fas fa-list-ul me-2"></i>All Concerns</h3>
+        <div class="realtime-clock" id="currentDateTime">
+            <i class="fas fa-clock me-2"></i><span id="datetime"></span>
+        </div>
     </div>
 
     <div class="table-container mx-4">
@@ -287,19 +335,19 @@ $result = mysqli_query($conn, $query);
                         $statusClass = '';
                         switch ($row['Status']) {
                             case 'Completed':
-                                $statusClass = 'bg-success text-white';
+                                $statusClass = 'bg-success text-white'; // Green
                                 break;
                             case 'In Progress':
-                                $statusClass = 'bg-warning text-dark';
+                                $statusClass = 'bg-primary text-white'; // Blue
                                 break;
                             case 'Pending':
-                                $statusClass = 'bg-danger text-white';
+                                $statusClass = 'bg-warning text-dark'; // Yellow
                                 break;
                             case 'Cancelled':
-                                $statusClass = 'bg-secondary text-white';
+                                $statusClass = 'bg-danger text-white'; // Red
                                 break;
                             default:
-                                $statusClass = 'bg-info text-white';
+                                $statusClass = 'bg-secondary text-white';
                         }
 
                         $assignedName = trim($row['Assigned_to']);
@@ -351,55 +399,47 @@ $result = mysqli_query($conn, $query);
                 second: '2-digit',
                 hour12: true 
             };
-            document.getElementById('currentDateTime').textContent = now.toLocaleString('en-US', options);
+            document.getElementById('datetime').textContent = now.toLocaleString('en-US', options);
         }
 
         setInterval(updateDateTime, 1000);
         updateDateTime();
+
+        document.getElementById('savePasswordBtn').addEventListener('click', () => {
+            const currentPassword = document.getElementById('currentPassword').value.trim();
+            const newPassword = document.getElementById('newPassword').value.trim();
+            const confirmPassword = document.getElementById('confirmPassword').value.trim();
+
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                Swal.fire('Error', 'Please fill in all fields.', 'error');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                Swal.fire('Error', 'New password and confirmation do not match.', 'error');
+                return;
+            }
+
+            fetch('change_password.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({currentPassword, newPassword})
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success){
+                    Swal.fire('Success', data.message, 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('changePasswordModal')).hide();
+                    document.getElementById('changePasswordForm').reset();
+                } else {
+                    Swal.fire('Error', data.message, 'error');
+                }
+            })
+            .catch(() => Swal.fire('Error', 'Something went wrong.', 'error'));
+        });
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
-    <script>
-    // Open modal when clicking "Change Password"
-    document.getElementById('changePasswordLink').addEventListener('click', e => {
-        e.preventDefault();
-        new bootstrap.Modal(document.getElementById('changePasswordModal')).show();
-    });
-
-    document.getElementById('savePasswordBtn').addEventListener('click', () => {
-        const currentPassword = document.getElementById('currentPassword').value.trim();
-        const newPassword = document.getElementById('newPassword').value.trim();
-        const confirmPassword = document.getElementById('confirmPassword').value.trim();
-
-        if (!currentPassword || !newPassword || !confirmPassword) {
-            Swal.fire('Error', 'Please fill in all fields.', 'error');
-            return;
-        }
-
-        if (newPassword !== confirmPassword) {
-            Swal.fire('Error', 'New password and confirmation do not match.', 'error');
-            return;
-        }
-
-        fetch('change_password.php', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({currentPassword, newPassword})
-        })
-        .then(res => res.json())
-        .then(data => {
-            if(data.success){
-                Swal.fire('Success', data.message, 'success');
-                bootstrap.Modal.getInstance(document.getElementById('changePasswordModal')).hide();
-                document.getElementById('changePasswordForm').reset();
-            } else {
-                Swal.fire('Error', data.message, 'error');
-            }
-        })
-        .catch(() => Swal.fire('Error', 'Something went wrong.', 'error'));
-    });
-    </script>
-
 </body>
 </html>

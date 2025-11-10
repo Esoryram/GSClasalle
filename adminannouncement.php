@@ -24,57 +24,65 @@ $announcementsResult = mysqli_query($conn, $announcementsQuery);
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<!-- Google Fonts Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 
-    <style>
-        /* ===== NAVBAR ===== */
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: #f4f4f4;
-            padding-top: 80px;
-        }
+<style>
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600; 
+    background: #f4f4f4;
+}
 
-        .navbar {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            background: linear-gradient(135deg, #163a37, #1c4440, #275850, #1f9158);
-            color: white;
-            padding: 15px 30px;
-            z-index: 1000;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+/* Navbar */
+.navbar {
+    display: flex;
+    align-items: center;
+    background: linear-gradient(135deg, #087830, #3c4142);
+    padding: 15px 15px;
+    color: white;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    position: relative;
+}
 
-        .navbar .logo {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
+.logo {
+    display: flex;
+    align-items: center;
+    margin-right: 15px;
+}
 
-        .navbar .logo img {
-            height: 40px;
-            width: auto;
-        }
+.logo img {
+    height: 35px;
+    width: auto;
+    object-fit: contain;
+}
 
-        .navbar .logo h2 {
-            margin: 0;
-            font-size: 22px;
-        }
+.navbar h2 {
+    margin-left: 50px;
+    font-size: 24px;
+    margin-top: 2px;
+}
 
-        .return-btn {
-            background: #107040;
-            color: white;
-            padding: 8px 16px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-        }
+.return-btn {
+    background: #107040;
+    color: white;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    text-decoration: none;
+    display: inline-block;
+    transition: background 0.3s;
+    font-size: 14px;
+    margin-left: auto;
+}
 
-        .return-btn:hover {
-            background: #07532e;
-        }
+.return-btn:hover {
+    background: #07532e;
+    color: white;
+}
 
         .container {
             padding: 20px 60px;
@@ -200,12 +208,15 @@ $announcementsResult = mysqli_query($conn, $announcementsQuery);
 <body>
 
     <div class="navbar">
-        <div class="logo">
-            <img src="img/LSULogo.png" alt="LSU Logo">
-            <h2>Announcement</h2>
-        </div>
-        <button class="return-btn" onclick="window.history.back()">Return</button>
+    <div class="logo">
+        <img src="img/LSULogo.png" alt="LSU Logo">
+        <h2>Announcements</h2>
     </div>
+
+    <a href="#" id="returnButton" class="return-btn">
+        <i class="fas fa-arrow-left me-1"></i> Return
+    </a>
+</div>
 
     <div class="container">
 
@@ -355,5 +366,28 @@ $announcementsResult = mysqli_query($conn, $announcementsQuery);
             });
         });
     </script>
+    <script>
+// Store the referrer URL when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Get the referrer (previous page)
+    const referrer = document.referrer;
+    
+    // Store it in sessionStorage for persistence
+    if (referrer && !referrer.includes('adminannouncement.php')) {
+        sessionStorage.setItem('previousPage', referrer);
+    }
+    
+    // Set the return button href
+    const returnButton = document.getElementById('returnButton');
+    const previousPage = sessionStorage.getItem('previousPage');
+    
+    if (previousPage) {
+        returnButton.href = previousPage;
+    } else {
+        // Fallback to userconcerns.php if no referrer is available
+        returnButton.href = 'adminconcerns.php';
+    }
+});
+</script>
 </body>
 </html>
