@@ -407,7 +407,7 @@ $announcementsResult = mysqli_query($conn, $announcementsQuery);
             <a href="adminreports.php" class="<?php echo ($activePage == 'reports') ? 'active' : ''; ?>">
                 <i class="fas fa-chart-bar"></i> Reports
             </a>
-            <a href="admin_data.php" class="<?php echo ($activePage == 'system_data') ? 'active' : ''; ?>">
+            <a href="system_data.php" class="<?php echo ($activePage == 'system_data') ? 'active' : ''; ?>">
                 <i class="fas fa-chart-bar"></i> System Data
             </a>
         </div>

@@ -116,7 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         // Refresh page to show updated data
-        header("Location: admin_data.php");
+        header("Location: system_data.php");
         exit();
     }
 }
@@ -317,7 +317,7 @@ $services = $conn->query("SELECT * FROM services ORDER BY serviceID DESC");
             <a href="adminreports.php">
                 <i class="fas fa-chart-bar"></i> Reports
             </a>
-            <a href="admin_data.php" class="active">
+            <a href="system_data.php" class="active">
                 <i class="fas fa-database me-1"></i> System Data
             </a>
         </div>
