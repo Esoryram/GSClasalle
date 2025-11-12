@@ -1,5 +1,11 @@
 <?php
+session_start();
 include("config.php");
+
+if (!isset($_SESSION['username'])) {
+    header("Location: admin_login.php");
+    exit();
+}
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $id = $_POST['AnnouncementID'];
@@ -15,10 +21,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $stmt->bind_param("ssssi", $title, $content, $start, $end, $id);
 
     if ($stmt->execute()) {
-        echo "Announcement updated successfully!";
+        $_SESSION['alert_type'] = 'success';
+        $_SESSION['alert_message'] = 'Announcement updated successfully!';
     } else {
-        echo "Error updating announcement.";
+        $_SESSION['alert_type'] = 'error';
+        $_SESSION['alert_message'] = 'Error updating announcement.';
     }
     $stmt->close();
+    
+    header("Location: adminannouncement.php");
+    exit();
 }
 ?>

@@ -3,7 +3,7 @@ session_start();
 include("config.php");
 
 if (!isset($_SESSION['username'])) {
-    header("Location: login.php");
+    header("Location: admin_login.php");
     exit();
 }
 
@@ -13,12 +13,14 @@ if (isset($_GET['id'])) {
 
     $deleteQuery = "DELETE FROM Announcements WHERE AnnouncementID = $id";
     if (mysqli_query($conn, $deleteQuery)) {
-        header("Location: adminannouncement.php");
-        exit();
+        $_SESSION['alert_type'] = 'success';
+        $_SESSION['alert_message'] = 'Announcement deleted successfully!';
     } else {
-        echo "Error deleting announcement: " . mysqli_error($conn);
+        $_SESSION['alert_type'] = 'error';
+        $_SESSION['alert_message'] = 'Error deleting announcement: ' . mysqli_error($conn);
     }
-} else {
-    header("Location: adminannouncement.php");
-    exit();
 }
+
+header("Location: adminannouncement.php");
+exit();
+?>

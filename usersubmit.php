@@ -63,22 +63,6 @@
             color: white;
         }
 
-        .date-display {
-            text-align: right;
-            font-weight: bold;
-            margin: 15px auto;
-            width: 95%;
-            max-width: 850px;
-        }
-
-        .date-display span {
-            background: white;
-            border: 1px solid #ccc;
-            padding: 8px 15px;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-
         .form-card {
             background: white;
             border-radius: 12px;
@@ -300,15 +284,6 @@
                 margin: 0 10px 20px;
             }
             
-            .date-display {
-                margin: 10px auto;
-            }
-            
-            .date-display span {
-                font-size: 13px;
-                padding: 6px 12px;
-            }
-            
             .equipment-dropdown .select-items {
                 max-height: 150px;
             }
@@ -399,11 +374,6 @@
     <a href="#" id="returnButton" class="return-btn">
         <i class="fas fa-arrow-left me-1"></i> Return
     </a>
-</div>
-
-<!-- Current Date/Time -->
-<div class="date-display">
-    <span id="currentDateTime"></span>
 </div>
 
 <!-- Form -->
@@ -590,18 +560,6 @@ document.addEventListener('DOMContentLoaded', function() {
         returnButton.href = 'userconcerns.php';
     }
 });
-
-// Date/Time display
-function updateDateTime() {
-    const now = new Date();
-    const options = { 
-        year: 'numeric', month: 'long', day: 'numeric', 
-        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true 
-    };
-    document.getElementById('currentDateTime').textContent = now.toLocaleDateString('en-US', options);
-}
-updateDateTime();
-setInterval(updateDateTime, 1000);
 
 // Function to close all dropdowns except the specified one
 function closeAllDropdowns(exceptSelectId = null) {

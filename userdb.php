@@ -5,17 +5,25 @@ include("config.php");
 
 // Redirect user to login page if not logged in
 if (!isset($_SESSION['username'])) {
-    header("Location: login.php");
+    header("Location: user_login.php");
     exit();
+}
+
+// Ensure session consistency for change_password.php
+if (!isset($_SESSION['accountID']) && isset($_SESSION['user_id'])) {
+    $_SESSION['accountID'] = $_SESSION['user_id'];
+}
+if (!isset($_SESSION['user_id']) && isset($_SESSION['accountID'])) {
+    $_SESSION['user_id'] = $_SESSION['accountID'];
 }
 
 // Get the logged-in username and display name
 $username = $_SESSION['username'];
 $name = isset($_SESSION['name']) ? $_SESSION['name'] : $username;
-$activePage = "dashboard"; // Used to highlight active navbar link
+$activePage = "dashboard";
 
 // Fetch AccountID from session or database
-$accountID = $_SESSION['accountID'] ?? null;
+$accountID = $_SESSION['accountID'] ?? $_SESSION['user_id'] ?? null;
 
 if (!$accountID) {
     // Query database to get AccountID for the current user
@@ -26,7 +34,12 @@ if (!$accountID) {
 
     if ($row = $result->fetch_assoc()) {
         $accountID = $row['AccountID'];
-        $_SESSION['accountID'] = $accountID; // Store in session for future use
+        $_SESSION['accountID'] = $accountID;
+        $_SESSION['user_id'] = $accountID; // Set both for compatibility
+    } else {
+        // Handle error - user not found
+        header("Location: user_login.php");
+        exit();
     }
     $stmt->close(); 
 }
@@ -54,7 +67,7 @@ if ($accountID) {
         $result = $stmt->get_result();
         $row = $result->fetch_assoc();
 
-        ${$key} = $row[$key] ?? 0; // Dynamically set variable
+        ${$key} = $row[$key] ?? 0;
         $stmt->close();
     }
 
@@ -74,7 +87,7 @@ if ($accountID) {
     $stmt->execute();
     $result = $stmt->get_result();
     while ($row = $result->fetch_assoc()) {
-        $recentConcerns[] = $row; // Store in array for later table display
+        $recentConcerns[] = $row;
     }
     $stmt->close();
 }
@@ -83,7 +96,6 @@ if ($accountID) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- FIXED: Better viewport for iOS devices -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, shrink-to-fit=no">
     <title>My Dashboard | Concern Tracker</title>
 
@@ -97,7 +109,6 @@ if ($accountID) {
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 
     <style>
-        /* FIXED: Better base styles for mobile */
         * {
             -webkit-tap-highlight-color: transparent;
             -webkit-touch-callout: none;
@@ -119,11 +130,9 @@ if ($accountID) {
             font-family: 'Poppins', sans-serif;
             font-weight: 600;
             background: #f9fafb;
-            /* FIXED: Prevent horizontal scroll on mobile */
             overflow-x: hidden;
         }
 
-        /* Navbar Styles - FIXED for mobile */
         .navbar {
             display: flex;
             align-items: center;
@@ -132,7 +141,6 @@ if ($accountID) {
             color: white;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
             position: relative;
-            /* FIXED: Ensure navbar doesn't cause overflow */
             width: 100%;
             box-sizing: border-box;
         }
@@ -170,7 +178,6 @@ if ($accountID) {
             background: #107040;
         }
 
-        /* FIXED: Better mobile menu toggle */
         .navbar-toggler {
             display: none;
             background: transparent;
@@ -183,7 +190,6 @@ if ($accountID) {
             cursor: pointer;
         }
 
-        /* FIXED: Dropdown Menu for touch */
         .dropdown {
             position: relative;
         }
@@ -196,7 +202,6 @@ if ($accountID) {
             color: white;
             background: transparent;
             border: none;
-            /* FIXED: Better touch target */
             min-height: 44px;
         }
 
@@ -224,7 +229,6 @@ if ($accountID) {
             color: #333;
             text-decoration: none;
             font-size: 14px;
-            /* FIXED: Better touch targets */
             min-height: 44px;
             display: flex;
             align-items: center;
@@ -234,12 +238,10 @@ if ($accountID) {
             background: #f1f1f1;
         }
 
-        /* Container for dashboard content */
         .container {
             padding: 20px 15px;
         }
 
-        /* Top dashboard layout: cards + announcements */
         .top-dashboard-grid {
             display: grid;
             grid-template-columns: 3fr 1fr;
@@ -247,14 +249,12 @@ if ($accountID) {
             margin-bottom: 25px;
         }
 
-        /* Status cards wrapper */
         .status-cards-wrapper {
             display: grid;
             grid-template-columns: repeat(4, 1fr); 
-            gap: 15px; /* Gap between cards */
+            gap: 15px;
         }
 
-        /* Individual dashboard card */
         .dashboard-card {
             background: white;
             border-radius: 12px;
@@ -290,7 +290,6 @@ if ($accountID) {
             text-transform: capitalize; 
         }
 
-        /* Cards color based on status */
         .card-total { 
             color: #275850; 
         }
@@ -326,7 +325,6 @@ if ($accountID) {
             color: #087830; 
         }
 
-        /* Call-to-action section */
         .cta-section {
             text-align: center;
             margin: 20px 0;
@@ -345,7 +343,6 @@ if ($accountID) {
             transition: background 0.3s, transform 0.1s;
             box-shadow: 0 4px 10px rgba(31, 145, 88, 0.4);
             width: 300px;
-            align: center;
         }
 
         #submitConcernBtn:hover {
@@ -354,19 +351,17 @@ if ($accountID) {
             color: white;
         }
 
-        /* Recent concerns panel */
         .recent-concerns-panel {
             background: white;
             border-radius: 12px; 
             padding: 20px; 
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); 
-            margin-top: 20px; /* Space above the panel */
+            margin-top: 20px;
             overflow-x: auto;
         }
 
-        /* Table styling */
         .table {
-            min-width: 600px; /* Ensure table is scrollable on mobile */
+            min-width: 600px;
         }
 
         .table th, .table td { 
@@ -375,7 +370,6 @@ if ($accountID) {
             padding: 10px 8px;
         }
 
-        /* Status pill styling */
         .status-pill {
             padding: 4px 10px;
             border-radius: 50px;
@@ -400,7 +394,6 @@ if ($accountID) {
             color: #065f46; 
         }
 
-        /* Announcements panel */
         .announcements-panel {
             background: white;
             border-radius: 12px;
@@ -434,7 +427,6 @@ if ($accountID) {
             background: #f0f4f8;
         }
 
-        /* Scrollbar styling for announcements */
         #announcementsContainer {
             max-height: 130px;
             overflow-y: auto;
@@ -454,29 +446,6 @@ if ($accountID) {
             background-color: #f0f0f0; 
         }
 
-        /* Password toggle button styles */
-        .input-group .toggle-password {
-            border: 1px solid #ced4da;
-            border-left: none;
-            background: white;
-            transition: all 0.2s;
-            min-width: 45px;
-        }
-
-        .input-group .toggle-password:hover {
-            background: #f8f9fa;
-        }
-
-        .input-group .toggle-password.active {
-            background: #e9ecef;
-            color: #495057;
-        }
-
-        .input-group .toggle-password.active i::before {
-            content: "\f070"; /* fa-eye-slash */
-        }
-
-        /* FIXED: Mobile Responsive - iPhone 12 Pro is 390px wide */
         @media (max-width: 480px) {
             .navbar {
                 padding: 10px 12px;
@@ -566,7 +535,6 @@ if ($accountID) {
             }
         }
 
-        /* FIXED: Specific media query for iPhone 12 Pro (390px) */
         @media (max-width: 390px) {
             .navbar .links a {
                 font-size: 14px;
@@ -587,7 +555,6 @@ if ($accountID) {
             }
         }
 
-        /* FIXED: Better tablet styles */
         @media (min-width: 481px) and (max-width: 768px) {
             .navbar {
                 padding: 12px 15px;
@@ -666,7 +633,7 @@ if ($accountID) {
             <li><a class="dropdown-item" href="user_archived.php">
                 <i class="fas fa-archive me-2"></i>Archived Concerns
             </a></li>
-            <li><a class="dropdown-item" href="login.php">
+            <li><a class="dropdown-item" href="index.php">
                 <i class="fas fa-sign-out-alt me-2"></i>Logout
             </a></li>
         </ul>
@@ -676,7 +643,6 @@ if ($accountID) {
 <div class="container">
     <div class="top-dashboard-grid">
         <div class="status-cards-wrapper">
-
             <div class="dashboard-card card-total">
                 <div class="card-icon"><i class="fas fa-boxes"></i></div>
                 <h1 class="card-value"><?= $total ?></h1>
@@ -704,7 +670,6 @@ if ($accountID) {
 
         <div class="announcements-panel">
             <h3>Announcements</h3>
-
             <div id="announcementsContainer">
                 <div class="announcement-item">Loading announcements...</div>
             </div>
@@ -773,7 +738,7 @@ if ($accountID) {
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
 
 <script>
-    // FIXED: Better mobile menu toggle with touch support
+    // Mobile menu functionality
     document.addEventListener('DOMContentLoaded', function() {
         const navbarToggle = document.getElementById('navbarToggle');
         const navbarLinks = document.getElementById('navbarLinks');
@@ -793,7 +758,7 @@ if ($accountID) {
             }
         });
 
-        // FIXED: Prevent body scroll when menu is open on mobile
+        // Prevent body scroll when menu is open on mobile
         navbarToggle.addEventListener('click', function() {
             if (navbarLinks.classList.contains('show')) {
                 document.body.style.overflow = 'hidden';
@@ -801,89 +766,6 @@ if ($accountID) {
                 document.body.style.overflow = '';
             }
         });
-
-        // Password visibility toggle functionality
-        document.querySelectorAll('.toggle-password').forEach(button => {
-            button.addEventListener('click', function() {
-                const targetId = this.getAttribute('data-target');
-                const passwordInput = document.getElementById(targetId);
-                const icon = this.querySelector('i');
-                
-                if (passwordInput.type === 'password') {
-                    passwordInput.type = 'text';
-                    this.classList.add('active');
-                    icon.classList.remove('fa-eye');
-                    icon.classList.add('fa-eye-slash');
-                } else {
-                    passwordInput.type = 'password';
-                    this.classList.remove('active');
-                    icon.classList.remove('fa-eye-slash');
-                    icon.classList.add('fa-eye');
-                }
-                
-                // Focus back on the input for better UX
-                passwordInput.focus();
-            });
-        });
-
-        // Close password visibility when modal is hidden
-        const changePasswordModal = document.getElementById('changePasswordModal');
-        if (changePasswordModal) {
-            changePasswordModal.addEventListener('hidden.bs.modal', function() {
-                // Reset all password fields to hidden and reset icons
-                document.querySelectorAll('input[type="text"][id*="Password"]').forEach(input => {
-                    input.type = 'password';
-                });
-                document.querySelectorAll('.toggle-password').forEach(button => {
-                    button.classList.remove('active');
-                    const icon = button.querySelector('i');
-                    icon.classList.remove('fa-eye-slash');
-                    icon.classList.add('fa-eye');
-                });
-                // Reset the form
-                document.getElementById('changePasswordForm').reset();
-            });
-        }
-
-        // Password change handler
-        const savePasswordBtn = document.getElementById('savePasswordBtn');
-        if (savePasswordBtn) {
-            savePasswordBtn.addEventListener('click', function(){
-                const currentPassword = document.getElementById('currentPassword').value;
-                const newPassword = document.getElementById('newPassword').value;
-                const confirmPassword = document.getElementById('confirmPassword').value;
-
-                if (!currentPassword || !newPassword || !confirmPassword) {
-                    Swal.fire('Error', 'Please fill in all password fields!', 'error');
-                    return;
-                }
-
-                if (newPassword !== confirmPassword) {
-                    Swal.fire('Error', 'Passwords do not match!', 'error');
-                    return;
-                }
-
-                if (newPassword.length < 6) {
-                    Swal.fire('Error', 'New password must be at least 6 characters long!', 'error');
-                    return;
-                }
-
-                fetch('change_password.php', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({currentPassword, newPassword})
-                })
-                .then(res => res.json())
-                .then(data => {
-                    Swal.fire(data.success ? 'Success' : 'Error', data.message, data.success ? 'success' : 'error');
-                    if (data.success) {
-                        document.getElementById('changePasswordForm').reset();
-                        bootstrap.Modal.getInstance(document.getElementById('changePasswordModal')).hide();
-                    }
-                })
-                .catch(() => Swal.fire('Error', 'Something went wrong.', 'error'));
-            });
-        }
     });
 
     function loadAnnouncements() {
@@ -930,7 +812,7 @@ if ($accountID) {
     }
 
     loadAnnouncements();
-    setInterval(loadAnnouncements, 30000); // auto-refresh every 30 seconds
+    setInterval(loadAnnouncements, 30000);
 </script>
 
 <!-- Announcement Modal -->
@@ -946,51 +828,7 @@ if ($accountID) {
   </div>
 </div>
 
-<!-- Change Password Modal -->
-<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header" style="background-color:#1f9158; color:white;">
-        <h5 class="modal-title" id="changePasswordLabel">Change Password</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form id="changePasswordForm">
-          <div class="mb-3">
-            <label for="currentPassword" class="form-label">Current Password</label>
-            <div class="input-group">
-              <input type="password" class="form-control" id="currentPassword" required>
-              <button type="button" class="btn btn-outline-secondary toggle-password" data-target="currentPassword">
-                <i class="fas fa-eye"></i>
-              </button>
-            </div>
-          </div>
-          <div class="mb-3">
-            <label for="newPassword" class="form-label">New Password</label>
-            <div class="input-group">
-              <input type="password" class="form-control" id="newPassword" required>
-              <button type="button" class="btn btn-outline-secondary toggle-password" data-target="newPassword">
-                <i class="fas fa-eye"></i>
-              </button>
-            </div>
-          </div>
-          <div class="mb-3">
-            <label for="confirmPassword" class="form-label">Confirm New Password</label>
-            <div class="input-group">
-              <input type="password" class="form-control" id="confirmPassword" required>
-              <button type="button" class="btn btn-outline-secondary toggle-password" data-target="confirmPassword">
-                <i class="fas fa-eye"></i>
-              </button>
-            </div>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-success" id="savePasswordBtn">Change Password</button>
-      </div>
-    </div>
-  </div>
-</div>
+<!-- Include Change Password Modal -->
+<?php include('change_password_modal.php'); ?>
 </body>
 </html>

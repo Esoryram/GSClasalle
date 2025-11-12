@@ -5,8 +5,16 @@ include("config.php");
 
 // Redirect to login page if user is not logged in
 if (!isset($_SESSION['username'])) {
-    header("Location: login.php");
+    header("Location: user_login.php");
     exit();
+}
+
+// Ensure session consistency for change_password.php
+if (!isset($_SESSION['accountID']) && isset($_SESSION['user_id'])) {
+    $_SESSION['accountID'] = $_SESSION['user_id'];
+}
+if (!isset($_SESSION['user_id']) && isset($_SESSION['accountID'])) {
+    $_SESSION['user_id'] = $_SESSION['accountID'];
 }
 
 // Set username and display name
@@ -41,11 +49,10 @@ if ($openConcernId) {
     $stmt->close();
 }
 
-// Fetch concerns for the logged-in user (excluding Completed and Cancelled)
+// Fetch concerns for the logged-in user (excluding Completed and Cancelled) - REMOVED EquipmentFacilities JOIN
 $stmt = $conn->prepare(
-    "SELECT c.*, ef.Type as EquipmentType 
+    "SELECT c.* 
      FROM Concerns c 
-     LEFT JOIN EquipmentFacilities ef ON c.ConcernID = ef.ConcernID 
      WHERE c.AccountID = ? 
      AND c.Status NOT IN ('Completed', 'Cancelled') 
      ORDER BY c.Concern_Date DESC"
@@ -576,7 +583,7 @@ $stmt->close();
             <li><a class="dropdown-item" href="user_archived.php">
                 <i class="fas fa-archive me-2"></i>Archived Concerns
             </a></li>
-            <li><a class="dropdown-item" href="login.php">
+            <li><a class="dropdown-item" href="index.php">
                 <i class="fas fa-sign-out-alt me-2"></i>Logout
             </a></li>
         </ul>
@@ -813,36 +820,6 @@ $stmt->close();
 
         // Run auto-open function
         autoOpenConcern();
-
-        // Password change handler
-        const savePasswordBtn = document.getElementById('savePasswordBtn');
-        if (savePasswordBtn) {
-            savePasswordBtn.addEventListener('click', function(){
-                const currentPassword = document.getElementById('currentPassword').value;
-                const newPassword = document.getElementById('newPassword').value;
-                const confirmPassword = document.getElementById('confirmPassword').value;
-
-                if (newPassword !== confirmPassword) {
-                    Swal.fire('Error', 'Passwords do not match!', 'error');
-                    return;
-                }
-
-                fetch('change_password.php', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({currentPassword, newPassword})
-                })
-                .then(res => res.json())
-                .then(data => {
-                    Swal.fire(data.success ? 'Success' : 'Error', data.message, data.success ? 'success' : 'error');
-                    if (data.success) {
-                        document.getElementById('changePasswordForm').reset();
-                        bootstrap.Modal.getInstance(document.getElementById('changePasswordModal')).hide();
-                    }
-                })
-                .catch(() => Swal.fire('Error', 'Something went wrong.', 'error'));
-            });
-        }
     });
 
     // Handle back/forward browser navigation
@@ -860,37 +837,7 @@ $stmt->close();
     });
 </script>
 
-<!-- Change Password Modal -->
-<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header" style="background-color:#1f9158; color:white;">
-                <h5 class="modal-title" id="changePasswordLabel">Change Password</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="changePasswordForm">
-                    <div class="mb-3">
-                        <label for="currentPassword" class="form-label">Current Password</label>
-                        <input type="password" class="form-control" id="currentPassword" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="newPassword" class="form-label">New Password</label>
-                        <input type="password" class="form-control" id="newPassword" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="confirmPassword" class="form-label">Confirm New Password</label>
-                        <input type="password" class="form-control" id="confirmPassword" required>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-success" id="savePasswordBtn">Change Password</button>
-            </div>
-        </div>
-    </div>
-</div>
-
+<!-- Include Change Password Modal -->
+<?php include('change_password_modal.php'); ?>
 </body>
 </html>

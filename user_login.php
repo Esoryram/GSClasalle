@@ -1,71 +1,74 @@
 <?php
 session_start();
+include("config.php");
 
-include 'config.php';
-
+// Handle login form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $name = trim($_POST['name']);
     $username = trim($_POST['username']);
     $password = $_POST['password'];
-    $confirm_password = $_POST['confirm_password'];
-    $role = 'student_staff'; // Force student_staff role
 
     // Validate inputs
     $errors = [];
     
-    if (empty($name) || empty($username) || empty($password)) {
-        $errors[] = "All fields are required";
+    if (empty($username) || empty($password)) {
+        $errors[] = "Please fill in both username and password fields";
     }
     
-    if ($password !== $confirm_password) {
-        $errors[] = "Passwords do not match";
-    }
-    
-    if (strlen($password) < 6) {
-        $errors[] = "Password must be at least 6 characters long";
-    }
+    if (empty($errors)) {
+        // Check if user exists
+        $sql = "SELECT * FROM accounts WHERE Username = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("s", $username);
+        $stmt->execute();
+        $result = $stmt->get_result();
 
-    // Check if username already exists
-    if (empty($errors)) {
-        $check = $conn->query("SELECT * FROM accounts WHERE Username='$username'");
-        if ($check && $check->num_rows > 0) {
-            $errors[] = "Username already exists";
-        } elseif (!$check) {
-            $errors[] = "Database error: " . $conn->error;
-        }
-    }
-    
-    if (empty($errors)) {
-        // Hash password and create account
-        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-        
-        $insert_result = $conn->query("INSERT INTO accounts (Name, Username, Password, Role) 
-                          VALUES ('$name','$username','$hashed_password','$role')");
-        
-        if ($insert_result) {
-            header("Location: user_login.php?success=account_created");
-            exit();
+        if ($result->num_rows == 1) {
+            $user = $result->fetch_assoc();
+            
+            // Verify password
+            if (password_verify($password, $user['Password'])) {
+                // Check if user is student_staff
+                if ($user['Role'] == 'student_staff') {
+                    // Password is correct and role is student_staff, set session variables
+                    $_SESSION['accountid'] = $user['AccountID'];
+                    $_SESSION['username'] = $user['Username'];
+                    $_SESSION['name'] = $user['Name'];
+                    $_SESSION['role'] = $user['Role'];
+                    
+                    // Redirect to student/staff dashboard
+                    header("Location: userdb.php");
+                    exit();
+                } else {
+                    // User is not student_staff
+                    $errors[] = "This account cannot access the student/staff portal";
+                }
+            } else {
+                // Invalid password
+                $errors[] = "The username or password you entered is incorrect";
+            }
         } else {
-            $errors[] = "Failed to create account: " . $conn->error;
+            // User not found
+            $errors[] = "No account found with this username";
         }
+        
+        $stmt->close();
     }
     
-    // If there are errors, store them in session and redirect back
+    // If there are errors, store them in session
     if (!empty($errors)) {
-        $_SESSION['signup_errors'] = $errors;
-        $_SESSION['form_data'] = ['name' => $name, 'username' => $username];
-        header("Location: signup.php");
+        $_SESSION['login_errors'] = $errors;
+        $_SESSION['form_data'] = ['username' => $username];
+        header("Location: user_login.php");
         exit();
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>La Salle - Sign Up</title>
+    <title>La Salle - Student/Staff Login</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
@@ -106,14 +109,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             z-index: -1;
         }
 
-        /* Logo styling */
+        /* Logo styling - Made smaller */
         .logo img {
             max-width: 120px;
             height: auto;
             display: block;
-            margin: 0 auto 10px auto;
+            margin: 0 auto 15px auto;
         }
 
+        /* Floating shapes animation */
         .floating-shapes {
             position: absolute;
             top: 0;
@@ -183,8 +187,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             width: 100%;
             max-width: 450px;
             background-color: rgba(255, 255, 255, 0.95);
-            border-radius: 18px;
-            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
             overflow: hidden;
             animation: fadeIn 0.8s ease-out;
         }
@@ -203,20 +207,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         header {
             background-color: #087830;
             color: white;
-            padding: 20px 30px 15px 30px;
+            padding: 15px 40px 10px 40px;
             text-align: center;
             position: relative;
         }
 
         .back-btn {
             position: absolute;
-            top: 15px;
-            left: 15px;
+            top: 20px;
+            left: 20px;
             background: rgba(255, 255, 255, 0.2);
             color: white;
             border: none;
-            width: 35px;
-            height: 35px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -224,7 +228,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             cursor: pointer;
             transition: background 0.3s ease;
             text-decoration: none;
-            font-size: 0.9rem;
         }
 
         .back-btn:hover {
@@ -233,31 +236,30 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         .page-title {
             color: #AED14F;
-            font-size: 1.6rem;
+            font-size: 1.8rem;
             font-weight: 600;
-            margin-bottom: 3px;
+            margin-bottom: 5px;
         }
 
         .page-subtitle {
             color: white;
-            font-size: 0.9rem;
+            font-size: 1rem;
             opacity: 0.9;
         }
 
-        .signup-form {
-            padding: 30px;
+        .login-form {
+            padding: 20px;
         }
 
         .form-group {
-            margin-bottom: 12px;
+            margin-bottom: 15px;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
             color: #3c4142;
             font-weight: 600;
-            font-size: 0.9rem;
         }
 
         .input-with-icon {
@@ -266,22 +268,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         .input-with-icon i:first-child {
             position: absolute;
-            left: 12px;
+            left: 15px;
             top: 50%;
             transform: translateY(-50%);
             color: #087830;
-            font-size: 0.9rem;
         }
 
         .input-with-icon input {
             width: 100%;
-            padding: 12px 40px 12px 35px;
+            padding: 15px 50px 15px 45px;
             border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 0.9rem;
+            border-radius: 10px;
+            font-size: 1rem;
             transition: all 0.3s ease;
-            height: 44px;
-            background-color: white;
         }
 
         .input-with-icon input:focus {
@@ -292,56 +291,51 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         .toggle-password {
             position: absolute;
-            right: 12px;
+            right: 15px;
             top: 50%;
             transform: translateY(-50%);
             color: #6c757d;
             cursor: pointer;
             transition: color 0.3s ease;
-            font-size: 0.9rem;
         }
 
         .toggle-password:hover {
             color: #087830;
         }
 
-        .signup-btn {
+        .login-btn {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             background: linear-gradient(135deg, #087830 0%, #4ec66a 100%);
             color: white;
             border: none;
-            border-radius: 8px;
-            font-size: 1rem;
+            border-radius: 10px;
+            font-size: 1.1rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-top: 8px;
-            height: 40px;
+            margin-top: 10px;
         }
 
-        .signup-btn:hover {
+        .login-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(8, 120, 48, 0.3);
+            box-shadow: 0 5px 15px rgba(8, 120, 48, 0.3);
         }
 
-        .login-link {
+        .signup-link {
             text-align: center;
-            margin-top: 15px;
-            margin-bottom: -10px;
+            margin-top: 25px;
             color: #3c4142;
-            font-size: 0.9rem;
         }
 
-        .login-link a {
+        .signup-link a {
             color: #087830;
             text-decoration: none;
             font-weight: 600;
             transition: color 0.3s ease;
-            font-size: 0.9rem;
         }
 
-        .login-link a:hover {
+        .signup-link a:hover {
             color: #4ec66a;
             text-decoration: underline;
         }
@@ -349,11 +343,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         .error-message {
             background: #ffebee;
             color: #c62828;
-            padding: 10px 12px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            border-left: 3px solid #c62828;
-            font-size: 0.85rem;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #c62828;
+            font-size: 0.9rem;
+            animation: slideIn 0.3s ease-out;
         }
 
         .error-message p,
@@ -367,18 +362,30 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         .success-message {
             background: #e8f5e8;
             color: #2e7d32;
-            padding: 10px 12px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            border-left: 3px solid #2e7d32;
-            font-size: 0.85rem;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2e7d32;
+            font-size: 0.9rem;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         footer {
             background-color: #3c4142;
             color: white;
             text-align: center;
-            padding: 15px;
+            padding: 20px;
             font-size: 0.9rem;
         }
 
@@ -387,29 +394,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 max-width: 100%;
             }
             
-            .signup-form {
-                padding: 25px 20px;
+            .login-form {
+                padding: 30px 25px;
             }
             
             .logo img {
-                max-width: 80px;
+                max-width: 100px;
             }
             
             header {
-                padding: 15px 25px 12px 25px;
-            }
-            
-            .page-title {
-                font-size: 1.4rem;
-            }
-            
-            .page-subtitle {
-                font-size: 0.8rem;
+                padding: 20px 30px 15px 30px;
             }
         }
     </style>
 </head>
 <body>
+    <!-- Enhanced background with floating shapes -->
     <div class="floating-shapes">
         <div class="shape"></div>
         <div class="shape"></div>
@@ -419,24 +419,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
     <div class="container">
         <header>
-            <a href="user_login.php" class="back-btn">
+            <a href="index.php" class="back-btn">
                 <i class="fas fa-arrow-left"></i>
             </a>
             <div class="logo">
                 <img src="img/LSULogo.png" alt="LSU Logo">
             </div>
-            <h1 class="page-title">Create Account</h1>
-            <p class="page-subtitle">Join as Student/Staff</p>
+            <h1 class="page-title">User Login</h1>
+            <p class="page-subtitle">Access your student or staff account</p>
         </header>
         
-        <div class="signup-form">
-            <?php if (isset($_SESSION['signup_errors'])): ?>
+        <div class="login-form">
+            <?php if (isset($_SESSION['login_errors'])): ?>
                 <div class="error-message">
                     <?php 
-                    foreach ($_SESSION['signup_errors'] as $error) {
+                    foreach ($_SESSION['login_errors'] as $error) {
                         echo "<p><i class='fas fa-exclamation-circle'></i> $error</p>";
                     }
-                    unset($_SESSION['signup_errors']);
+                    unset($_SESSION['login_errors']);
                     ?>
                 </div>
             <?php endif; ?>
@@ -447,21 +447,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 </div>
             <?php endif; ?>
 
-            <form action="signup.php" method="POST">
-                <div class="form-group">
-                    <label for="name">Full Name</label>
-                    <div class="input-with-icon">
-                        <i class="fas fa-user"></i>
-                        <input type="text" id="name" name="name" placeholder="Enter your full name" required 
-                               value="<?php echo isset($_SESSION['form_data']['name']) ? htmlspecialchars($_SESSION['form_data']['name']) : ''; ?>">
-                    </div>
+            <?php if (isset($_GET['success']) && $_GET['success'] == 'logged_out'): ?>
+                <div class="success-message">
+                    <p><i class="fas fa-info-circle"></i> You have been successfully logged out.</p>
                 </div>
-                
+            <?php endif; ?>
+
+            <form action="user_login.php" method="POST" id="loginForm">
                 <div class="form-group">
                     <label for="username">Username</label>
                     <div class="input-with-icon">
-                        <i class="fas fa-at"></i>
-                        <input type="text" id="username" name="username" placeholder="Choose a username" required
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="username" name="username" placeholder="Enter your username" required 
                                value="<?php echo isset($_SESSION['form_data']['username']) ? htmlspecialchars($_SESSION['form_data']['username']) : ''; ?>">
                     </div>
                 </div>
@@ -470,27 +467,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <label for="password">Password</label>
                     <div class="input-with-icon">
                         <i class="fas fa-lock"></i>
-                        <input type="password" id="password" name="password" placeholder="Create a password" required>
+                        <input type="password" id="password" name="password" placeholder="Enter your password" required>
                         <i class="fas fa-eye toggle-password" id="togglePassword"></i>
                     </div>
                 </div>
                 
-                <div class="form-group">
-                    <label for="confirm_password">Confirm Password</label>
-                    <div class="input-with-icon">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm your password" required>
-                        <i class="fas fa-eye toggle-password" id="toggleConfirmPassword"></i>
-                    </div>
-                </div>
-                
-                <button type="submit" class="signup-btn">
-                    <i class="fas fa-user-plus"></i> Create Account
+                <button type="submit" class="login-btn">
+                    <i class="fas fa-sign-in-alt"></i> User Login
                 </button>
             </form>
             
-            <div class="login-link">
-                Already have an account? <a href="user_login.php">Login here</a>
+            <div class="signup-link">
+                Don't have an account? <a href="signup.php">Sign Up</a>
             </div>
         </div>
         
@@ -501,13 +489,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        // Show/Hide Password Functionality
         document.addEventListener('DOMContentLoaded', function() {
-            // Toggle password visibility for both fields
             const togglePassword = document.getElementById('togglePassword');
             const passwordInput = document.getElementById('password');
-            const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
-            const confirmPasswordInput = document.getElementById('confirm_password');
             
+            // Toggle password visibility
             togglePassword.addEventListener('click', function() {
                 const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
                 passwordInput.setAttribute('type', type);
@@ -515,45 +502,47 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 this.classList.toggle('fa-eye-slash');
             });
             
-            toggleConfirmPassword.addEventListener('click', function() {
-                const type = confirmPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                confirmPasswordInput.setAttribute('type', type);
-                this.classList.toggle('fa-eye');
-                this.classList.toggle('fa-eye-slash');
+            // Add some interactive effects
+            const inputs = document.querySelectorAll('input');
+            
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentElement.style.transform = 'scale(1.02)';
+                });
+                
+                input.addEventListener('blur', function() {
+                    this.parentElement.style.transform = 'scale(1)';
+                });
             });
             
-            // Form validation
-            const form = document.querySelector('form');
+            // Form submission animation
+            const form = document.getElementById('loginForm');
             form.addEventListener('submit', function(e) {
-                const password = passwordInput.value;
-                const confirmPassword = confirmPasswordInput.value;
+                const username = document.getElementById('username').value.trim();
+                const password = document.getElementById('password').value.trim();
                 
-                if (password !== confirmPassword) {
+                // Basic client-side validation
+                if (!username || !password) {
                     e.preventDefault();
-                    Swal.fire({
-                        title: 'Passwords Do Not Match',
-                        text: 'Please make sure both passwords are the same.',
-                        icon: 'warning',
-                        confirmButtonColor: '#087830',
-                        confirmButtonText: 'OK'
-                    });
+                    // Show inline error instead of SweetAlert
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'error-message';
+                    errorDiv.innerHTML = '<p><i class="fas fa-exclamation-circle"></i> Please fill in both username and password fields</p>';
+                    
+                    // Insert error message at the top of the form
+                    const form = document.getElementById('loginForm');
+                    const firstFormGroup = form.querySelector('.form-group');
+                    form.insertBefore(errorDiv, firstFormGroup);
+                    
+                    // Remove error after 5 seconds
+                    setTimeout(() => {
+                        errorDiv.remove();
+                    }, 5000);
                     return;
                 }
                 
-                if (password.length < 6) {
-                    e.preventDefault();
-                    Swal.fire({
-                        title: 'Password Too Short',
-                        text: 'Password must be at least 6 characters long.',
-                        icon: 'warning',
-                        confirmButtonColor: '#087830',
-                        confirmButtonText: 'OK'
-                    });
-                    return;
-                }
-                
-                const btn = this.querySelector('.signup-btn');
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Account...';
+                const btn = this.querySelector('.login-btn');
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
                 btn.disabled = true;
             });
             

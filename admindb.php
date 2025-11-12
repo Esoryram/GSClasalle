@@ -3,10 +3,9 @@ session_start();
 include("config.php");
 
 if (!isset($_SESSION['username'])) {
-    header("Location: login.php");
+    header("Location: admin_login.php");
     exit();
 }
-
 $username = $_SESSION['username'];
 $name = isset($_SESSION['name']) ? $_SESSION['name'] : $username;
 $activePage = "dashboard";
@@ -35,8 +34,7 @@ $recentConcernsQuery = "
         c.ConcernID, 
         c.Concern_Title, 
         c.Room, 
-        c.Problem_Type, 
-        c.Priority, 
+        c.Service_type, 
         c.Concern_Date,
         c.Status, 
         c.Assigned_to, 
@@ -69,7 +67,7 @@ $announcementsResult = mysqli_query($conn, $announcementsQuery);
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-<!-- Google Fonts Poppins -->
+    <!-- Google Fonts Poppins -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 
     <style>
@@ -397,17 +395,20 @@ $announcementsResult = mysqli_query($conn, $announcementsQuery);
             <a href="admindb.php" class="<?php echo ($activePage == 'dashboard') ? 'active' : ''; ?>">
                 <i class="fas fa-home me-1"></i> Dashboard
             </a>
+            <a href="adminannouncement.php" class="<?php echo ($activePage == 'announcements') ? 'active' : ''; ?>">
+                <i class="fas fa-bullhorn"></i> Announcements
+            </a>
             <a href="adminconcerns.php" class="<?php echo ($activePage == 'concerns') ? 'active' : ''; ?>">
                 <i class="fas fa-list-ul me-1"></i> Concerns
-            </a>
-            <a href="adminreports.php" class="<?php echo ($activePage == 'reports') ? 'active' : ''; ?>">
-                <i class="fas fa-chart-bar"></i> Reports
             </a>
             <a href="adminfeedback.php" class="<?php echo ($activePage == 'feedback') ? 'active' : ''; ?>">
                 <i class="fas fa-comment-alt"></i> Feedback
             </a>
-            <a href="adminannouncement.php" class="<?php echo ($activePage == 'announcements') ? 'active' : ''; ?>">
-                <i class="fas fa-bullhorn"></i> Announcements
+            <a href="adminreports.php" class="<?php echo ($activePage == 'reports') ? 'active' : ''; ?>">
+                <i class="fas fa-chart-bar"></i> Reports
+            </a>
+            <a href="admin_data.php" class="<?php echo ($activePage == 'system_data') ? 'active' : ''; ?>">
+                <i class="fas fa-chart-bar"></i> System Data
             </a>
         </div>
 
@@ -420,47 +421,17 @@ $announcementsResult = mysqli_query($conn, $announcementsQuery);
                 <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
                     <i class="fas fa-key me-2"></i>Change Password
                 </a></li>
-                <li><a class="dropdown-item" href="login.php">
+                <li><a class="dropdown-item" href="index.php">
                     <i class="fas fa-sign-out-alt me-2"></i>Logout
                 </a></li>
             </ul>
         </div>
     </div>
 
-    <!-- Change Password Modal -->
-    <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header" style="background-color:#1f9158; color:white;">
-            <h5 class="modal-title" id="changePasswordLabel">Change Password</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <form id="changePasswordForm">
-              <div class="mb-3">
-                <label for="currentPassword" class="form-label">Current Password</label>
-                <input type="password" class="form-control" id="currentPassword" required>
-              </div>
-              <div class="mb-3">
-                <label for="newPassword" class="form-label">New Password</label>
-                <input type="password" class="form-control" id="newPassword" required>
-              </div>
-              <div class="mb-3">
-                <label for="confirmPassword" class="form-label">Confirm New Password</label>
-                <input type="password" class="form-control" id="confirmPassword" required>
-              </div>
-            </form>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-success" id="savePasswordBtn">Change Password</button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <!-- Include Change Password Modal -->
+    <?php include('change_password_modal.php'); ?>
 
     <div class="container">
-        <!-- Keep your existing dashboard content here (status cards, announcements, recent concerns) -->
         <div class="top-dashboard-grid">
             <!-- Status Cards -->
             <div class="status-cards-wrapper">
@@ -527,7 +498,6 @@ $announcementsResult = mysqli_query($conn, $announcementsQuery);
                             <th>Title</th>
                             <th>Room</th>
                             <th>Type</th>
-                            <th>Priority</th>
                             <th>Date</th>
                             <th>Status</th>
                             <th>Reported By</th>
@@ -543,8 +513,7 @@ $announcementsResult = mysqli_query($conn, $announcementsQuery);
                                     <td>{$row['ConcernID']}</td>
                                     <td>" . htmlspecialchars($row['Concern_Title']) . "</td>
                                     <td>" . htmlspecialchars($row['Room']) . "</td>
-                                    <td>" . htmlspecialchars($row['Problem_Type']) . "</td>
-                                    <td>" . htmlspecialchars($row['Priority']) . "</td>
+                                    <td>" . htmlspecialchars($row['Service_type']) . "</td>
                                     <td>" . htmlspecialchars(date('M d, Y', strtotime($row['Concern_Date']))) . "</td>
                                     <td>" . htmlspecialchars($row['Status']) . "</td>
                                     <td>" . htmlspecialchars($row['ReportedBy']) . "</td>
@@ -581,39 +550,5 @@ $announcementsResult = mysqli_query($conn, $announcementsQuery);
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
-<script>
-    document.getElementById('savePasswordBtn').addEventListener('click', () => {
-        const currentPassword = document.getElementById('currentPassword').value.trim();
-        const newPassword = document.getElementById('newPassword').value.trim();
-        const confirmPassword = document.getElementById('confirmPassword').value.trim();
-
-        if (!currentPassword || !newPassword || !confirmPassword) {
-            Swal.fire('Error', 'Please fill in all fields.', 'error');
-            return;
-        }
-
-        if (newPassword !== confirmPassword) {
-            Swal.fire('Error', 'New password and confirmation do not match.', 'error');
-            return;
-        }
-
-        fetch('change_password.php', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({currentPassword, newPassword})
-        })
-        .then(res => res.json())
-        .then(data => {
-            if(data.success){
-                Swal.fire('Success', data.message, 'success');
-                bootstrap.Modal.getInstance(document.getElementById('changePasswordModal')).hide();
-                document.getElementById('changePasswordForm').reset();
-            } else {
-                Swal.fire('Error', data.message, 'error');
-            }
-        })
-        .catch(() => Swal.fire('Error', 'Something went wrong.', 'error'));
-    });
-</script>
 </body>
 </html>

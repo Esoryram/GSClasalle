@@ -3,7 +3,7 @@ session_start();
 include("config.php");
 
 if (!isset($_SESSION['username'])) {
-    header("Location: login.php");
+    header("Location: admin_login.php");
     exit();
 }
 
@@ -31,15 +31,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $insert->bind_param("ssiss", $title, $content, $accountID, $start_date, $end_date);
 
         if ($insert->execute()) {
-            echo "<script>
-                alert('Announcement posted successfully!');
-                window.location.href='admindb.php';
-            </script>";
+            $_SESSION['alert_type'] = 'success';
+            $_SESSION['alert_message'] = 'Announcement posted successfully!';
         } else {
-            echo "<script>alert('Error posting announcement.'); window.history.back();</script>";
+            $_SESSION['alert_type'] = 'error';
+            $_SESSION['alert_message'] = 'Error posting announcement.';
         }
     } else {
-        echo "<script>alert('Please fill out all required fields.'); window.history.back();</script>";
+        $_SESSION['alert_type'] = 'error';
+        $_SESSION['alert_message'] = 'Please fill out all required fields.';
     }
+    
+    header("Location: adminannouncement.php");
+    exit();
 }
 ?>

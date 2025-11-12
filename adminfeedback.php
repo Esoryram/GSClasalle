@@ -4,7 +4,7 @@ include("config.php");
 
 // Only allow admin
 if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'admin') {
-    header("Location: login.php");
+    header("Location: admin_login.php");
     exit();
 }
 
@@ -46,9 +46,9 @@ if (isset($_SESSION['response_success']) && $_SESSION['response_success'] === tr
 // Fetch all feedback with concerns and users INCLUDING Admin_Response
 $query = "
     SELECT f.FeedbackID, f.Comments, f.Date_Submitted, f.Admin_Response, f.Date_Responded,
-           c.Concern_Title, c.Description, c.Room, c.Problem_Type, c.Priority,
+           c.Concern_Title, c.Description, c.Room, c.Service_type,
            a.Username, a.Name
-    FROM Feedback f
+    FROM Feedbacks f
     JOIN Concerns c ON f.ConcernID = c.ConcernID
     JOIN Accounts a ON f.AccountID = a.AccountID
     ORDER BY f.Date_Submitted DESC
@@ -189,7 +189,6 @@ body {
                         <th>Description</th>
                         <th>Room</th>
                         <th>Problem Type</th>
-                        <th>Priority</th>
                         <th>User Comments</th>
                         <th>Date Submitted</th>
                         <th>Admin Response</th>
@@ -205,8 +204,7 @@ body {
                                 <td><?= htmlspecialchars($row['Concern_Title']) ?></td>
                                 <td><?= htmlspecialchars($row['Description']) ?></td>
                                 <td><?= htmlspecialchars($row['Room'] ?? 'N/A') ?></td>
-                                <td><?= htmlspecialchars($row['Problem_Type']) ?></td>
-                                <td><?= htmlspecialchars($row['Priority']) ?></td>
+                                <td><?= htmlspecialchars($row['Service_type']) ?></td>
                                 <td><?= htmlspecialchars($row['Comments']) ?></td>
                                 <td><?= date('M d, Y h:i A', strtotime($row['Date_Submitted'])) ?></td>
                                 <td>
@@ -217,9 +215,7 @@ body {
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#responseModal<?= $row['FeedbackID'] ?>">
-                                        <i class="fas fa-reply me-1"></i> Respond
-                                    </button>
+                                    <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#responseModal<?= $row['FeedbackID'] ?>"> Respond </button>
 
                                     <!-- Modal -->
                                     <div class="modal fade" id="responseModal<?= $row['FeedbackID'] ?>" tabindex="-1" aria-labelledby="modalLabel<?= $row['FeedbackID'] ?>" aria-hidden="true">
@@ -245,9 +241,6 @@ body {
                                                     <input type="hidden" name="feedback_id" value="<?= $row['FeedbackID'] ?>">
                                                 </div>
                                                 <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                                        <i class="fas fa-times me-1"></i> Cancel
-                                                    </button>
                                                     <button type="submit" class="btn btn-success">
                                                         <i class="fas fa-paper-plane me-1"></i> Submit Response
                                                     </button>
